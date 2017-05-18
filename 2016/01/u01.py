@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+__motd__ = '--- Day 1: No Time for a Taxicab ---'
+
 __url__ = 'http://adventofcode.com/2016/day/1'
 
 verbose = 0

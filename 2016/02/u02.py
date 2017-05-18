@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+__motd__ = '--- Day 2: Bathroom Security ---'
+
 __url__ = 'http://adventofcode.com/2016/day/2'
 
 verbose = 0
