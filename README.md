@@ -2,10 +2,10 @@
  
 Project [Advent-of-Code](http://adventofcode.com/ "Advent of Code Homepage") has collection of programming challenges glued by interesting background stories.
 
- Stories are organized as Advent Calendar and are published daily. Each story/unit contains two related challenges.
+ Stories are organized as Advent Calendar and are published daily during the [Advent season](https://en.wikipedia.org/wiki/Advent). Each story/unit contains two related challenges.
  At the beginning you have access only to Part-A story/task. After solving the challenge the result (usually simple integer value) 
  is evaluated and upon sucessfull verification the Part-B is revealed. Part-B is always related to Part-A and often
- uses the same input dataset. The educational aspect is that PART-B is more complex than Part-A and it is like generalization of Part-A. 
+ uses the same input dataset. The educational aspect is that Part-B is more complex than Part-A and it is like generalization of Part-A. 
  If implementation of Part-A is implemented correctly then adding solution for Part-B should be quite straightforward like adding new method or
  additional parameter etc.
  
