@@ -3,10 +3,10 @@
 Project [Advent-of-Code](http://adventofcode.com/ "Advent of Code Homepage") has collection of programming challenges glued by interesting background stories.
 
  Stories are organized as Advent Calendar and are published daily. Each story/unit contains two related challenges.
- At the beginning you have access only to PART-A story/task. After solving the challenge the result (usually simple integer value) 
- is evaluated and upon sucessfull verification the PART-B is revealed. PART-B is always related to PART-A and often
- uses the same input dataset. The educational aspect is that PART-B is more complex than PART-A and it is like generalization of PART-A. 
- If implementation of PART-A is implemented correctly then adding solution for PART-B should be quite straightforward like adding new method or
+ At the beginning you have access only to Part-A story/task. After solving the challenge the result (usually simple integer value) 
+ is evaluated and upon sucessfull verification the Part-B is revealed. Part-B is always related to Part-A and often
+ uses the same input dataset. The educational aspect is that PART-B is more complex than Part-A and it is like generalization of Part-A. 
+ If implementation of Part-A is implemented correctly then adding solution for Part-B should be quite straightforward like adding new method or
  additional parameter etc.
  
  
@@ -27,7 +27,7 @@ Possible future improvements and ideas (in arbitrary order):
 * analyze resource requirements [memory, cpu]
 * code optimization
 * improved documentation
-* implementation in multiple languages
+* implementation in multiple programming languages
 
 #### History
  version 2017.5 - the initial GitHub release in May 2017
