@@ -9,7 +9,25 @@ Project [Advent-of-Code](http://adventofcode.com/ "Advent of Code Homepage") has
  If implementation of Part-A is implemented correctly then adding solution for Part-B should be quite straightforward like adding new method or
  additional parameter etc.
  
+ The result is mostly simple integer value which is automatically evaluated. However, some units run-time can be in hours. 
  
+#### Valuable Features
+There are some hard-to-find aspects (a.k.a. valuable featutes) of [Advent-of-Code](http://adventofcode.com/ "Advent of Code Homepage") 
+project to consider:
+
+  * interesting & funny
+  * two tiers educational aspect as part-a and part-b unit relation
+  * xfw (cholesterol free) web pages:
+    * no adobe flash
+    * no jquery animations
+    * no megabytes of javascript crap
+    * no cloud-flare, akamai and other cdn garbage
+    * zen style minimalistic design (simplicity & functionality first)
+    * creative retro ASCII art
+  * each task/unit has few testcases
+  * personalized input data
+  * evaluation of results
+
 #### You will find here ... 
 basic implementation of advent-of-code tasks, mostly in Python 2.x [other implementations might follow as time permits] 
 
@@ -21,13 +39,18 @@ basic implementation of advent-of-code tasks, mostly in Python 2.x [other implem
      * Unit: [2016/05](2016/05/) - Story: [ Day 5: How About a Nice Game of Chess? ](http://adventofcode.com/2016/day/5)
      * Unit: [2016/06](2016/06/) - Story: [ Day 6: Signals and Noise ](http://adventofcode.com/2016/day/6)
      * Unit: [2016/07](2016/07/) - Story: [ Day 7: Internet Protocol Version 7 ](http://adventofcode.com/2016/day/7)
+     * Unit: [2016/08](2016/08/) - Story: [ Day 8: Two-Factor Authentication ](http://adventofcode.com/2016/day/8)
+     * Unit: [2016/09](2016/09/) - Story: [ Day 9: Explosives in Cyberspace ](http://adventofcode.com/2016/day/9)
+     * Unit: [2016/10](2016/10/) - Story: [ Day 10: Balance Bots ](http://adventofcode.com/2016/day/10)
+     
 
 #### To Do
 Possible future improvements and ideas (in arbitrary order):
 * analyze resource requirements [memory, cpu]
-* code optimization
+* code optimization, profiling
 * improved documentation
 * implementation in multiple programming languages
+* comparision of various implementations
 
 #### History
  version 2017.5 - the initial GitHub release in May 2017
