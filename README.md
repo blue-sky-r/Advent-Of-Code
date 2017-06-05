@@ -42,6 +42,7 @@ basic implementation of advent-of-code tasks, mostly in Python 2.x [other implem
      * Unit: [2016/08](2016/08/) - Story: [ Day 8: Two-Factor Authentication ](http://adventofcode.com/2016/day/8)
      * Unit: [2016/09](2016/09/) - Story: [ Day 9: Explosives in Cyberspace ](http://adventofcode.com/2016/day/9)
      * Unit: [2016/10](2016/10/) - Story: [ Day 10: Balance Bots ](http://adventofcode.com/2016/day/10)
+     * Unit: [2016/11](2016/11/) - Story: [ Day 11: Radioisotope Thermoelectric Generators ](http://adventofcode.com/2016/day/11)
      
 
 #### To Do
