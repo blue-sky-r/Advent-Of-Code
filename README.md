@@ -44,6 +44,8 @@ basic implementation of advent-of-code tasks, mostly in Python 2.x [other implem
      * Unit: [2016/10](2016/10/) - Story: [ Day 10: Balance Bots ](http://adventofcode.com/2016/day/10)
      * Unit: [2016/11](2016/11/) - Story: [ Day 11: Radioisotope Thermoelectric Generators ](http://adventofcode.com/2016/day/11)
      * Unit: [2016/12](2016/12/) - Story: [ Day 12: Leonardos Monorail ](http://adventofcode.com/2016/day/12)
+     * Unit: [2016/13](2016/13/) - Story: [ Day 13: A Maze of Twisty Little Cubicles ](http://adventofcode.com/2016/day/13)
+     * Unit: [2016/14](2016/14/) - Story: [ Day 14: One-Time Pad ](http://adventofcode.com/2016/day/14)
 
 #### To Do
 Possible future improvements and ideas (in arbitrary order):
