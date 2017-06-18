@@ -46,6 +46,7 @@ basic implementation of advent-of-code tasks, mostly in Python 2.x [other implem
      * Unit: [2016/12](2016/12/) - Story: [ Day 12: Leonardos Monorail ](http://adventofcode.com/2016/day/12)
      * Unit: [2016/13](2016/13/) - Story: [ Day 13: A Maze of Twisty Little Cubicles ](http://adventofcode.com/2016/day/13)
      * Unit: [2016/14](2016/14/) - Story: [ Day 14: One-Time Pad ](http://adventofcode.com/2016/day/14)
+     * Unit: [2016/15](2016/15/) - Story: [ Day 15: Timing is Everything ](http://adventofcode.com/2016/day/15)
      * Unit: [2016/16](2016/16/) - Story: [ Day 16: Dragon Checksum ](http://adventofcode.com/2016/day/16)
 
 #### To Do
