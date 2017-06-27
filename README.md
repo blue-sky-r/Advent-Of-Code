@@ -48,6 +48,7 @@ basic implementation of advent-of-code tasks, mostly in Python 2.x [other implem
      * Unit: [2016/14](2016/14/) - Story: [ Day 14: One-Time Pad ](http://adventofcode.com/2016/day/14)
      * Unit: [2016/15](2016/15/) - Story: [ Day 15: Timing is Everything ](http://adventofcode.com/2016/day/15)
      * Unit: [2016/16](2016/16/) - Story: [ Day 16: Dragon Checksum ](http://adventofcode.com/2016/day/16)
+     * Unit: [2016/17](2016/17/) - Story: [ Day 17: Two Steps Forward ](http://adventofcode.com/2016/day/17)
 
 #### To Do
 Possible future improvements and ideas (in arbitrary order):
