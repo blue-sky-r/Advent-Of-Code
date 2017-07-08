@@ -4,14 +4,13 @@ __motd__ = '--- Day 21: Scrambled Letters and Hash ---'
 
 __url__ = 'http://adventofcode.com/2016/day/21'
 
-verbose = 1
+verbose = 0
 
 import re
 
 class Scrambler:
 
-    def __init__(self, str):
-        self.str = str
+    def __init__(self):
         self.scramble_tab = {
             'swap position (\d+) with position (\d+)':  self.swap_pos_x_y,
             'swap letter (\w) with letter (\w)':        self.swap_chr_x_y,
@@ -26,85 +25,116 @@ class Scrambler:
             'swap letter (\w) with letter (\w)':        self.swap_chr_x_y,
             'rotate right (\d+) steps?':                self.rot_l_x,
             'rotate left (\d+) steps?':                 self.rot_r_x,
-            'rotate based on position of letter (\w)':  self.rot_l_pos_x,
+            'rotate based on position of letter (\w)':  self.unrot_r_pos_x,
             'reverse positions (\d+) through (\d+)':    self.rev_pos_x_y,
             'move position (\d+) to position (\d+)':    self.mov_pos_x_y
         }
 
-    def swap_pos_x_y(self, x, y):
-        l = list(self.str)
-        l[x] = self.str[y]
-        l[y] = self.str[x]
-        self.str = ''.join(l)
+    def integerize(self, v):
+        """ return integer value of v (string or integer) """
+        return v if type(v) == int else int(v)
 
-    def swap_chr_x_y(self, x, y):
-        self.swap_pos_x_y(self.str.index(x), self.str.index(y))
+    def swap_pos_x_y(self, str, sx, sy):
+        """ swap position SX with position SY """
+        x,y = self.integerize(sx), self.integerize(sy)
+        l = list(str)
+        l[x],l[y] = str[y],str[x]
+        return ''.join(l)
 
-    def rot_r_x(self, x):
-        x = x % len(self.str)
-        self.str = self.str[-x:] + self.str[:-x]
+    def swap_chr_x_y(self, str, cx, cy):
+        """ swap letter CX with letter CY """
+        return self.swap_pos_x_y(str, str.index(cx), str.index(cy))
 
-    def rot_l_x(self, x):
-        x = x % len(self.str)
-        self.str = self.str[x:] + self.str[:x]
+    def rot_r_x(self, str, sx):
+        """ rotate right SX steps """
+        x = self.integerize(sx) % len(str)
+        return str[-x:] + str[:-x]
 
-    def rot_r_pos_x(self, x):
-        i = self.str.index(x)
+    def rot_l_x(self, str, sx):
+        """ rotate left SX steps """
+        x = self.integerize(sx) % len(str)
+        return str[x:] + str[:x]
+
+    def rot_r_pos_x(self, str, cx):
+        """ rotate based on position of letter CX """
+        i = str.index(cx)
         if i>=4: i += 1
         i += 1
-        self.rot_r_x(i)
+        return self.rot_r_x(str, i)
 
-    def rot_l_pos_x(self, x):
-        i = self.str.index(x)
-        if i>=4: i += 1
-        i += 1
-        self.rot_l_x(i)
+    def unrot_r_pos_x(self, str, cx):
+        """ undo rotate based on position of letter CX """
+        # try max 100
+        for rotl in range(1, 100):
+            src = self.rot_l_x(str, rotl)
+            res = self.rot_r_pos_x(src, cx)
+            if res == str:
+                return src
 
-    def rev_pos_x_y(self, x, y):
-        self.str = self.str[:x] + ''.join(reversed(self.str[x:y+1])) + self.str[y+1:]
+    def rev_pos_x_y(self, str, sx, sy):
+        """ reverse positions SX through SY """
+        x,y = self.integerize(sx), self.integerize(sy)
+        return str[:x] + ''.join(reversed(str[x:y+1])) + str[y+1:]
 
-    def mov_pos_x_y(self, x, y):
-        l = list(self.str)
+    def mov_pos_x_y(self, str, sx, sy):
+        """ move position SX to position SY """
+        x,y = self.integerize(sx), self.integerize(sy)
+        l = list(str)
         del l[x]
-        l.insert(y, self.str[x])
-        self.str = ''.join(l)
+        l.insert(y, str[x])
+        return ''.join(l)
 
-    def scramble(self, command):
-        if verbose: print command,'\t',self.str,'->',
+    def scramble(self, command, str):
+        """ scramble str with command """
+        if verbose: print '\t do:',command,'\t',str,'->',
         for regex,fnc in self.scramble_tab.items():
             m = re.match(regex, command)
             if m:
-                par = [ p if 'letter' in regex else int(p) for p in m.groups() ].reverse()
-                fnc(*par)
-                if verbose: print self.str
-                return True
+                par = list(m.groups())
+                res = fnc(str, *par)
+                if verbose: print res
+                return res
 
-    def unscramble(self, command):
-        if verbose: print command,'\t',self.str,'->',
+    def unscramble(self, command, str):
+        """ undo scramble str with command """
+        if verbose: print '\t un:',command,'\t',str,'->',
         for regex,fnc in self.unscramble_tab.items():
             m = re.match(regex, command)
             if m:
-                par = [ p if 'letter' in regex else int(p) for p in m.groups() ]
-                fnc(*par)
-                if verbose: print self.str
-                return True
+                par = list(m.groups())
+                if 'reverse' not in command: par.reverse()
+                res = fnc(str, *par)
+                if verbose: print res
+                return res
 
-    def exec_file(self, fname):
+    def scramble_file(self, str, fname):
+        """ scramble str by program sequence """
         with open(fname) as f:
             for line in f:
                 if not line.strip(): continue
-                if not self.scramble(line.strip()):
-                    print "CMD error:",line
-        return self.str
+                str = self.scramble(line.strip(), str)
+        return str
+
+    def unscramble_file(self, str, fname):
+        """ undo scramble str by program sequence """
+        with open(fname) as f:
+            lines = f.read().splitlines()
+        # process in reverse order
+        lines.reverse()
+        for line in lines:
+            if not line.strip(): continue
+            str = self.unscramble(line.strip(), str)
+        return str
 
 
 def testcase(input, result, b=False):
     " testcase verifies if input returns result "
     print "TestCase",'B' if b else 'A',
     print "for input:",input,"\t expected result:",result,
+    if verbose: print
     password, program = input
-    s = Scrambler(password)
-    r = s.exec_file(program)
+    s = Scrambler()
+    r = s.unscramble_file(password, program) if b else s.scramble_file(password, program)
     print 'got:',r,'\t','OK' if r == result else 'ERR'
     print
 
@@ -119,23 +149,23 @@ testcase((password, tcdata), 'decab')
 
 data = __file__.replace('.py', '.input')
 password = 'abcdefgh'
-s = Scrambler(password)
-r = s.exec_file(data)
+s = Scrambler()
+r = s.scramble_file(password, data)
 # aefgbcdh
 print 'Task A input file:',data,'Result:',r
 print
-xxx
+
 # ========
 #  Task B
 # ========
 
 # test cases
-testcase('', 0, b=True)
+password = 'decab'
+testcase((password, tcdata), 'abcde', b=True)
 
-with open(data) as f:
-    for line in f:
-        if not line: continue
-
-#
-print 'Task B input file:',data,'Result:',
-if verbose: print "Trace:",
+scrambled = 'fbgdceah'
+s = Scrambler()
+r = s.unscramble_file(scrambled, data)
+# egcdahbf
+print 'Task B input file:',data,'Result:',r
+print
