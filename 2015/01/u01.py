@@ -16,11 +16,13 @@ class Elevator:
         if i == '(': self.pos += 1
         if i == ')': self.pos -= 1
 
-    def follow(self, str, stop_at_base=False):
+    def follow(self, str, stop_at_basement=False):
+        self.step = 0
         for i in str:
             self.instruction(i)
-            if stop_at_base and lvl<0:
-                return self.pos
+            self.step += 1
+            if stop_at_basement and self.pos<0:
+                return self.step
         return self.pos
 
 
@@ -29,7 +31,7 @@ def testcase(input, result, task_b=False):
     print "TestCase",'B' if task_b else 'A',
     print "for input:",input,"\t expected result:",result,
     ele = Elevator()
-    r = ele.follow(input)
+    r = ele.follow(input, stop_at_basement=task_b)
     print 'got:',r,'\t','OK' if r == result else 'ERR'
     print
 
@@ -54,4 +56,22 @@ with open(data) as f:
         ele.follow(line.strip())
 # 232
 print 'Task A input file:',data,'Result:',ele.pos
+print
+
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase(')((((',     1, True)
+testcase('()())(((',  5, True)
+
+data = __file__.replace('.py', '.input')
+ele  = Elevator()
+with open(data) as f:
+    for line in f:
+        if not line: continue
+        ele.follow(line.strip(), stop_at_basement=True)
+# 1783
+print 'Task B input file:',data,'Result:',ele.step
 print
