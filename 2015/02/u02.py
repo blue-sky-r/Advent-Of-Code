@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__motd__ = '--- Day 1: I Was Told There Would Be No Math ---'
+__motd__ = '--- Day 2: I Was Told There Would Be No Math ---'
 
 __url__ = 'http://adventofcode.com/2015/day/2'
 
