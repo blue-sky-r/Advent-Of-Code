@@ -12,10 +12,6 @@ class IdScanner:
 
     def __init__(self):
         self.id = []
-        self.count = {
-            2: 0,
-            3: 0
-        }
 
     def chr_count(self, str):
         cnt = {}
@@ -26,22 +22,31 @@ class IdScanner:
         return cnt
 
     def checksum(self):
-        return self.count[2] * self.count[3]
+        sm = {}
+        for item in self.id:
+            id = item.keys()[0]
+            for chrcnt, times in item[id].items():
+                sm[chrcnt] = sm.get(chrcnt, 0) + 1
+        return sm[2] * sm[3]
 
-    def id23_str(self, str):
-        """ update counts for id str """
-        filter = [2,3]
-        for c,cnt in self.chr_count(str).items():
-            if cnt not in filter: continue
-            filter.remove(cnt)
-            self.count[cnt] += 1
-            if filter == []: break
-        if verbose: print "id23_str() count:",self.count
-        return
+    def id_counts(self, str):
+        """ get counts for id str """
+        counts = {}
+        for char,cnt in self.chr_count(str).items():
+            counts[cnt] = counts.get(cnt, 0) + 1
+        if verbose: print "id_counts(",str,") counts:",counts
+        return counts
 
-    def id23_lst(self, lst):
+    def add_id(self, str):
+        item = {
+            str: self.id_counts(str)
+        }
+        self.id.append(item)
+        return item
+
+    def id_lst(self, lst):
         for id in lst:
-            self.id23_str(id)
+            self.add_id(id)
         return self.checksum()
 
 
@@ -50,7 +55,7 @@ def testcase(input, result, task_b=False):
     print "TestCase",'B' if task_b else 'A',
     print "for input:",input,"\t expected result:",result,
     i = IdScanner()
-    r = i.id23_lst(input) if task_b else i.id23_lst(input)
+    r = i.id_lst(input) if task_b else i.id_lst(input)
     print 'got:',r,'\t','OK' if r == result else 'ERR'
     print
 
@@ -66,7 +71,7 @@ id = IdScanner()
 with open(data) as f:
     for line in f:
         if not line: continue
-        id.id23_str(line.strip())
+        id.add_id(line.strip())
 # 5434
 print 'Task A input file:',data,'Result:',id.checksum()
 print
