@@ -27,7 +27,7 @@ class IdScanner:
             id = item.keys()[0]
             for chrcnt, times in item[id].items():
                 sm[chrcnt] = sm.get(chrcnt, 0) + 1
-        return sm[2] * sm[3]
+        return sm.get(2, 0) * sm.get(3, 0)
 
     def id_counts(self, str):
         """ get counts for id str """
@@ -49,13 +49,39 @@ class IdScanner:
             self.add_id(id)
         return self.checksum()
 
+    def diff_match(self, id1, id2):
+        """ retruns diff count and matching part """
+        d, m = [], []
+        for c1,c2 in zip(id1, id2):
+            if c1 != c2:
+                d.append(c1)
+                continue
+            m.append(c1)
+        if verbose: print "diff_match(",id1,",",id2,") diff:", d," match:",m
+        return len(d), m
+
+    def find_min_diff_match(self):
+        found = None
+        for idx1,item1 in enumerate(self.id):
+            id1 = item1.keys()[0]
+            for idx2 in range(idx1+1, len(self.id)):
+                item2 = self.id[idx2]
+                id2 = item2.keys()[0]
+                diff, match = self.diff_match(id1, id2)
+                if found is None:
+                    found = diff, ''.join(match)
+                    continue
+                if diff < found[0]:
+                    found = diff, ''.join(match)
+        return found
 
 def testcase(input, result, task_b=False):
     " testcase verifies if input returns result "
     print "TestCase",'B' if task_b else 'A',
     print "for input:",input,"\t expected result:",result,
     i = IdScanner()
-    r = i.id_lst(input) if task_b else i.id_lst(input)
+    r = i.id_lst(input)
+    if task_b: r = i.find_min_diff_match()
     print 'got:',r,'\t','OK' if r == result else 'ERR'
     print
 
@@ -75,27 +101,19 @@ with open(data) as f:
 # 5434
 print 'Task A input file:',data,'Result:',id.checksum()
 print
-xxx
+
 # ========
 #  Task B
 # ========
 
 # test cases
-testcase([+1, -2, +3, +1],          2, task_b=True)
-testcase([+1, -1],                  0, task_b=True)
-testcase([+3, +3, +4, -2, -4],     10, task_b=True)
-testcase([-6, +3, +8, +5, -6],      5, task_b=True)
-testcase([+7, +7, -2, -7, -4],     14, task_b=True)
+testcase(['abcde', 'fghij', 'klmno', 'pqrst', 'fguij', 'axcye', 'wvxyz'], (1,'fgij'), task_b=True)
 
-fq = Frequency()
-dupl = None
-while dupl is None:
-    if verbose: print "history size:",len(fq.history)
-    with open(data) as f:
-        for line in f:
-            if not line: continue
-            dupl = fq.change_check_duplo(line.strip())
-            if dupl is not None: break
-# [1m 34s] 56360
-print 'Task B input file:',data,'Result:',dupl
+id = IdScanner()
+with open(data) as f:
+    for line in f:
+        if not line: continue
+        id.add_id(line.strip())
+# (1, 'agimdjvlhedpsyoqfzuknpjwt')
+print 'Task B input file:',data,'Result:',id.find_min_diff_match()
 print
