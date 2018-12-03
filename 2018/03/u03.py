@@ -39,6 +39,23 @@ class Fabric:
                     cnt += 1
         return cnt
 
+    def find_not_overlap(self):
+        found, hasoverlap = [], []
+        for x in range(self.size):
+            for y in range(self.size):
+                l = len(self.xy[x, y])
+                if l == 1:
+                    id = self.xy[x,y][0]
+                    if id not in found and id not in hasoverlap:
+                        found.append(id)
+                if l > 1:
+                    for id in self.xy[x, y]:
+                        if id not in hasoverlap:
+                            hasoverlap.append(id)
+                        if id in found:
+                            found.remove(id)
+        return found
+
     def claim_str(self, str):
         """ parse string format: #133 @ 468,238: 10x14 """
         id,at,xy,wxt = str.split(' ')
@@ -70,7 +87,7 @@ def testcase(input, result, task_b=False):
     print "for input:",input,"\t expected result:",result,
     f = Fabric(size=10)
     f.parse_lst(input)
-    r = f.count_overlap() if task_b else f.count_overlap()
+    r = f.find_not_overlap() if task_b else f.count_overlap()
     print 'got:',r,'\t','OK' if r == result else 'ERR'
     print
 
@@ -95,3 +112,15 @@ print
 #  Task B
 # ========
 
+# test cases
+testcase(['#1 @ 1,3: 4x4', '#2 @ 3,1: 4x4', '#3 @ 5,5: 2x2'], [3], task_b=True)
+
+data = __file__.replace('.py', '.input')
+fa = Fabric()
+with open(data) as f:
+    for line in f:
+        if not line: continue
+        fa.parse_str(line.strip())
+# [560]
+print 'Task B input file:', data, 'Result:', fa.find_not_overlap()
+print
