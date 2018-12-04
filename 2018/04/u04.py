@@ -50,7 +50,8 @@ class Log:
             self.table[key][m] = self.sym['sleep']
 
     def input_line(self, str):
-        """ [1518-11-04 00:02] Guard #99 begins shift """
+        """ process input string by regex matching """
+        # regex patterns: event -> regex
         pattern = {
             # [1518-11-04 00:02] Guard #99 begins shift
             'guard':  re.compile(r'\[\d{4}-(\d{2}-\d{2}) \d{2}:(\d{2})\] Guard (#\d+) begins shift'),
@@ -59,24 +60,31 @@ class Log:
             # [1518-11-05 00:55] wakes up
             'wakeup': re.compile(r'\[\d{4}-(\d{2}-\d{2}) \d{2}:(\d{2})\] wakes up')
         }
+        # match
         for event,pat in pattern.items():
             m = pat.match(str)
             if m:
                 date,time = m.group(1),m.group(2)
+                # guard shift starts
                 if event == 'guard':
                     self.tmp['gid']  = m.group(3)
                     self.tmp['date'] = date
                     self.record_guard(self.tmp['gid'], self.tmp['date'])
+                # guard falls asleep
                 if event == 'sleep':
                     self.tmp['start'] = time
+                # guard wakes up
                 if event == 'wakeup':
                     self.record_sleep(self.tmp['gid'], self.tmp['date'], self.tmp['start'], time)
                 break
+        # no break => nothing matched, we have an error
         else:
-            return 'invalid input line'
+            return 'invalid input line(%s)' % str
+        # no error
         return None
 
     def input_lst(self, input):
+        """ process input list, skip empty lines with simple error handling """
         for line in sorted(input):
             err = self.input_line(line)
             if err: print "ERR:",err
@@ -101,6 +109,7 @@ class Log:
         return guard
 
     def find_max_sleeper(self):
+        """ find guard_id with max. slept minutes and minute of max, probability of sleep """
         # row summary per guard
         guard = self.agg_by_guard()
         # guard -> sleep oer shift aggregated
@@ -113,11 +122,10 @@ class Log:
         return int(gidmax[1:]), mps
 
     def find_max_probability_minute(self):
+        """ find guard_id and minute for max.probability of sleep """
         # row summary per guard
         guard = self.agg_by_guard()
         #
-        #dict( [ (gid, max(agg.values())) for gid,agg in guard.items() ] )
-        # max probability guard -> minute of max probability
         found = {}
         for guard, record in guard.items():
             minute = max(record, key=record.get)
