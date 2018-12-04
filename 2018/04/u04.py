@@ -7,7 +7,7 @@ __url__ = 'http://adventofcode.com/2018/day/4'
 import re
 
 
-verbose = 1
+verbose = 0
 
 
 class Log:
@@ -20,30 +20,18 @@ class Log:
         }
         self.tmp = {}
 
-    def show(self):
-        """ print internal table """
+    def show(self, table=None, cellfrm='%1s'):
+        """ print table """
+        if table is None: table = self.table
         row = "%-12s %s"
         # header
         print
         print row % ('date id', 'minute')
-        print row % (' ', ''.join(["%1d" % (m / 10) for m in range(60)]))
-        print row % (' ', ''.join(["%1d" % (m % 10) for m in range(60)]))
-        #
-        for dateid in sorted(self.table.keys()):
-            print row % (dateid, ''.join( [ self.table[dateid][m] for m in range(60) ] ))
-        #
-
-    def show_table(self, table):
-        """ print internal table """
-        row = "%-12s %s"
-        # header
-        print
-        print row % ('date id', 'minute')
-        print row % (' ', ''.join(["%3d" % (m / 10) for m in range(60)]))
-        print row % (' ', ''.join(["%3d" % (m % 10) for m in range(60)]))
+        print row % (' ', ''.join([cellfrm % (m / 10) for m in range(60)]))
+        print row % (' ', ''.join([cellfrm % (m % 10) for m in range(60)]))
         #
         for dateid in sorted(table.keys()):
-            print row % (dateid, ''.join(['%3d' % table[dateid][m] for m in range(60)]))
+            print row % (dateid, ''.join( [cellfrm % table[dateid][m] for m in range(60) ] ))
         #
 
     def record_key(self, guard, date):
@@ -92,7 +80,7 @@ class Log:
         for line in sorted(input):
             err = self.input_line(line)
             if err: print "ERR:",err
-        self.show()
+        if verbose: self.show()
         return
 
     def agg_by_guard(self):
@@ -109,7 +97,7 @@ class Log:
             date, id = dateid.split(' ')
             guard[id] = dict([(m, guard.get(id, {}).get(m, 0) + sym2int[record[m]]) for m in range(60)])
         #
-        if verbose: self.show_table(guard)
+        if verbose: self.show(table=guard, cellfrm='%2x')
         return guard
 
     def find_max_sleeper(self):
@@ -127,13 +115,20 @@ class Log:
     def find_max_probability_minute(self):
         # row summary per guard
         guard = self.agg_by_guard()
+        #
+        #dict( [ (gid, max(agg.values())) for gid,agg in guard.items() ] )
         # max probability guard -> minute of max probability
-        maxprobm = {}
+        found = {}
         for guard, record in guard.items():
-            maxprobm[guard] = max(record, key=record.get)
-        gidmax = max(maxprobm, key=maxprobm.get)
+            minute = max(record, key=record.get)
+            if found.get('probab', 0) > record[minute]: continue
+            found = {
+                'gid': guard,
+                'minute': minute,
+                'probab': record[minute]
+            }
         # remove leading #
-        return int(gidmax[1:]), maxprobm[gidmax]
+        return int(found['gid'][1:]), found['minute']
 
     def task_a(self, input):
         """ task A """
@@ -195,6 +190,6 @@ testcase(Log(), None, 39584)
 # ========
 
 testcase(Log(), data.strip().split('\n'), 4455, task_b=True)
-# 50191 too low
-testcase(Log(), None, 39584, task_b=True)
+# 55053
+testcase(Log(), None, 55053, task_b=True)
 
