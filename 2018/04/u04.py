@@ -7,7 +7,7 @@ __url__ = 'http://adventofcode.com/2018/day/4'
 import re
 
 
-verbose = 0
+verbose = 1
 
 
 class Log:
@@ -31,6 +31,19 @@ class Log:
         #
         for dateid in sorted(self.table.keys()):
             print row % (dateid, ''.join( [ self.table[dateid][m] for m in range(60) ] ))
+        #
+
+    def show_table(self, table):
+        """ print internal table """
+        row = "%-12s %s"
+        # header
+        print
+        print row % ('date id', 'minute')
+        print row % (' ', ''.join(["%3d" % (m / 10) for m in range(60)]))
+        print row % (' ', ''.join(["%3d" % (m % 10) for m in range(60)]))
+        #
+        for dateid in sorted(table.keys()):
+            print row % (dateid, ''.join(['%3d' % table[dateid][m] for m in range(60)]))
         #
 
     def record_key(self, guard, date):
@@ -96,15 +109,13 @@ class Log:
             date, id = dateid.split(' ')
             guard[id] = dict([(m, guard.get(id, {}).get(m, 0) + sym2int[record[m]]) for m in range(60)])
         #
+        if verbose: self.show_table(guard)
         return guard
 
-    def agg_by_minute(self):
-        pass
-
-    def find_sleep_max(self):
+    def find_max_sleeper(self):
         # row summary per guard
         guard = self.agg_by_guard()
-        # guard -> sleep aggregated
+        # guard -> sleep oer shift aggregated
         gsagg = dict( [ (gid, sum(agg.values())) for gid,agg in guard.items() ] )
         # find guard id for max sleep
         gidmax = max(gsagg, key=gsagg.get)
@@ -113,15 +124,28 @@ class Log:
         # remove leading #
         return int(gidmax[1:]), mps
 
+    def find_max_probability_minute(self):
+        # row summary per guard
+        guard = self.agg_by_guard()
+        # max probability guard -> minute of max probability
+        maxprobm = {}
+        for guard, record in guard.items():
+            maxprobm[guard] = max(record, key=record.get)
+        gidmax = max(maxprobm, key=maxprobm.get)
+        # remove leading #
+        return int(gidmax[1:]), maxprobm[gidmax]
+
     def task_a(self, input):
         """ task A """
         self.input_lst(input)
-        id,m = self.find_sleep_max()
+        id, m = self.find_max_sleeper()
         return id * m
 
     def task_b(self, input):
         """ task B """
-        return
+        self.input_lst(input)
+        id, m = self.find_max_probability_minute()
+        return id * m
 
 
 def testcase(sut, input, result, task_b=False):
@@ -170,4 +194,7 @@ testcase(Log(), None, 39584)
 #  Task B
 # ========
 
+testcase(Log(), data.strip().split('\n'), 4455, task_b=True)
+# 50191 too low
+testcase(Log(), None, 39584, task_b=True)
 
