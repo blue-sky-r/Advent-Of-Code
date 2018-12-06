@@ -10,13 +10,12 @@ verbose = 0
 
 class DistMap:
 
-    def __init__(self, size=10):
+    def __init__(self, size=10, limit=32):
         self.size = size
+        self.limit = limit
         self.point = {}
-        #self.grid = dict([ (x,y) for x in range(size) for y in range(size) ])
-        self.grid = {}
 
-    def show(self, grid):
+    def show_grid(self, grid):
         """ visualize """
         print
         for y in range(self.size):
@@ -28,45 +27,58 @@ class DistMap:
         """ calc manhattan distance """
         return sum([ abs(b[i] - a[i]) for i in range(2) ])
 
-    def closest_points(self, herexy):
-        """ """
-        distto = {}
-        for id,xy in self.point.items():
-            distto[id] = self.manhattan_distance(herexy, xy)
-        if verbose: print "closest_points(",herexy,") -> ",distto,
-        mindstidx = min(distto, key=distto.get)
-        points =  [ pnt for pnt,dst in distto.items() if dst == distto[mindstidx] ]
-        if verbose: print ' min:',points
+    def points_distance(self, herexy):
+        """ calc distances to all points from herexy"""
+        dist = dict([ (id, self.manhattan_distance(herexy, xy)) for id, xy in self.point.items() ])
+        if verbose > 2: print 'points_distance(', herexy, ')',dist
+        return dist
+
+    def closest_points_distance(self, herexy):
+        """ filterout only closest points distances """
+        dist = self.points_distance(herexy)
+        # closest
+        mindstidx = min(dist, key=dist.get)
+        # firter ou only closest - could be more than one
+        points =  [ pnt for pnt,dst in dist.items() if dst == dist[mindstidx] ]
+        if verbose > 1: print 'closest_points_distance(',herexy,')',points
         return points
 
     def grid_distances(self):
-        """ """
-        for y in range(self.size):
-            for x in range(self.size):
-                dist = self.closest_points(herexy=(x,y))
-                self.grid[(x,y)] = dist
-        return
+        """ calc all distances to all points for entire grid (xy) -> {pointa->dista, pointb->distb}"""
+        grid = dict([ ( (x,y), self.points_distance((x, y)) ) for x in range(self.size) for y in range (self.size) ])
+        return grid
 
-    def calc_areas(self):
-        """ clc all areas on limited grid """
+    def grid_closest_distances(self):
+        """ calc the distances to closest point(s) only for entire grid (x,y) -> [pointz,pointb] """
+        grid = dict([ ( (x,y), self.closest_points_distance(herexy=(x, y)) ) for x in range(self.size) for y in range(self.size) ])
+        return grid
+
+    def calc_areas(self, grid):
+        """ calc all areas on limited grid, skip points equidistant from more points """
         area = {}
-        for xy, points in self.grid.items():
+        for xy, points in grid.items():
             # skip if xy has the same dist to more than one point
             if len(points) > 1: continue
+            # get point id
             key = points[0]
+            # count in
             area[key] = area.get(key, 0) + 1
         if verbose: print "calc_areas()",area
         return area
 
-    def area_no_inf(self, area):
+    def area_no_infinity(self, grid, area):
+        """ remove infinite (grid borderline) areas from area """
         # elmiminate infinite areas
         for i in range(self.size):
             # iterate borders: left right bottom top
             for xy in [(0, i), (self.size - 1, i), (i, 0), (i, self.size - 1)]:
                 # remove
-                pnt = self.grid[xy]
+                pnt = grid[xy]
+                # skip equidistant points
                 if len(pnt) > 1: continue
+                # get point id
                 point = pnt[0]
+                # remove
                 if point in area: del area[point]
         # area without infinites
         if verbose: print "area_no_inf()", area
@@ -78,11 +90,13 @@ class DistMap:
         if verbose: print "find_max_area() ",area[maxidx]
         return area[maxidx]
 
-    def sum_dist(self, limit):
+    def sum_dist_le_limit(self, grid, limit=32):
         """ find points with sum manhattan distance less than limit """
-        #area = self.grid_distances()
-
-        return
+        # summary distances (x,y) -> sum
+        sumgrid = dict([ (xy, sum(dst.values())) for xy,dst in grid.items() ])
+        # filter only sums bellow limit
+        filteredsumgrid = dict([ (xy, summ) for xy,summ in sumgrid.items() if summ < limit ])
+        return filteredsumgrid
 
     def add_point(self, str):
         """ add point coordinates x, y """
@@ -99,14 +113,19 @@ class DistMap:
         """ task A """
         for line in input:
             self.input_line(line)
-        self.grid_distances()
-        if verbose: self.show(self.grid)
-        a = self.area_no_inf( self.calc_areas() )
-        return self.find_max_area(a)
+        grid = self.grid_closest_distances()
+        if verbose: self.show_grid(grid)
+        area = self.area_no_infinity(grid, self.calc_areas(grid))
+        return self.find_max_area(area)
 
     def task_b(self, input):
         """ task B """
-        return
+        for line in input:
+            self.input_line(line)
+        grid = self.grid_distances()
+        if verbose: self.show_grid(grid)
+        r = self.sum_dist_le_limit(grid, limit=self.limit)
+        return len(r)
 
 
 def testcase(sut, input, result, task_b=False):
@@ -136,19 +155,15 @@ data = """
 8, 9
 """
 # test cases
-testcase(DistMap(), data.strip().split('\n'), 17)
-# 3722
+testcase(DistMap(), data.strip().split('\n'),   17)
+# [18s] 3722
 testcase(DistMap(size=500), None, 3722)
-xxx
-#
-testcase((), None, 1)
 
 # ========
 #  Task B
 # ========
 
 # test cases
-testcase((), ['', '', '', ''],            2, task_b=True)
-
-# [1m 34s] 56360
-testcase((), None, 2, task_b=True)
+testcase(DistMap(limit=32), data.strip().split('\n'),   16, task_b=True)
+# [18s] 44634
+testcase(DistMap(size=500, limit=10000), None, 44634, task_b=True)
