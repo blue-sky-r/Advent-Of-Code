@@ -23,51 +23,39 @@ class Sequence:
         self.dependency[a].append(b)
         return
 
-    def find_start(self):
-        """ start node has no dependencies """
-        found = []
-        # depend on
-        depon = [d for c, dep in self.dependency.items() for d in dep]
-        for c in self.dependency:
-            if c in depon: continue
-            if c not in found: found.append(c)
-        # sort
-        found.sort()
-        if verbose: print "find_start()",found
-        return found
-
-    def walk(self, act):
-        r = [ act ]
-        # tree = walk recursively
-        if act in self.dependency:
-            for c in sorted(self.dependency[act]):
-                if verbose: print "walk(",act,") -> ", self.dependency[act]
-                r = r + self.walk(c)
-        return r
-
     def can_go(self, path, b):
-        """ true if can go to b """
+        """ true if we can go to b """
+        # cannot go twice to the same node
         if b in path: return False
-        # all b dependensies
+        # check all b dependencies
         for check in self.dependency.get(b, []):
-            # if fullfilled just continue
+            # if dependency is fullfilled just continue
             if check in path: continue
             # dependency failed
             return False
+        # yes - we can go to the b
         return True
 
-    def walk_lin(self):
-        """ linear walk """
+    def walk(self):
+        """ walk """
+        # prepare all possible nodes sorted alphabetically
         allnodes = sorted(list(set([ y for x in self.dependency.values() for y in x ] + self.dependency.keys())))
+        # path already walked
         path = []
         while True:
             # check all moves
             avail = [ node for node in allnodes if self.can_go(path, node) ]
+            # debug
             if verbose: print "walk-lin() path:",path,"avail:",avail
+            # no more any steps available = end
             if len(avail) == 0: break
+            # take the (alphabetically) first node from available
             node = sorted(avail)[0]
+            # walk on
             path = path + [ node ]
+            # remove active node from available nodes to speed-up next searching steps
             allnodes.remove(node)
+        # walked path
         return path
 
     def input_line(self, str):
@@ -85,12 +73,7 @@ class Sequence:
             if err: print err
         #
         if verbose: print "dependency:",self.dependency
-        r = self.walk_lin()
-        #start = self.find_start()
-        #r = self.walk(start[0])
-        #if verbose: print "walk() ->",r
-        ## reduce all double nodes to the last single instance
-        #r = [ c for i,c in enumerate(r) if c not in r[i+1:] ]
+        r = self.walklin()
         print "keys:",sorted(self.dependency.keys())
         print "resu:",sorted(r)
         return ''.join(r)
