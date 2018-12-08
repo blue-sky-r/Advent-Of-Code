@@ -7,13 +7,16 @@ __url__ = 'http://adventofcode.com/2018/day/4'
 import re
 
 
-verbose = 1
+verbose = 0
 
 
 class Sequence:
 
-    def __init__(self):
+    def __init__(self, workers=2, stepsec=1):
         self.dependency = {}
+        # part B only
+        self.workers = workers
+        self.stepsec = stepsec
 
     def a_depends_b(self, a, b):
         """ a is dependent on b (b must be before a) """
@@ -46,7 +49,7 @@ class Sequence:
             # check all moves
             avail = [ node for node in allnodes if self.can_go(path, node) ]
             # debug
-            if verbose: print "walk-lin() path:",path,"avail:",avail
+            if verbose: print "walk() path:",path,"avail:",avail
             # no more any steps available = end
             if len(avail) == 0: break
             # take the (alphabetically) first node from available
@@ -57,6 +60,56 @@ class Sequence:
             allnodes.remove(node)
         # walked path
         return path
+
+    def cooperative_walk(self, workers):
+        """ cooperation mode """
+        # prepare all possible nodes sorted alphabetically
+        allnodes = sorted(list(set([y for x in self.dependency.values() for y in x] + self.dependency.keys())))
+        worker, path = {}, []
+        # time up to 1k
+        for time in range(1000):
+            # free workers
+            free_workers = [ id for id in range(self.workers) if worker.get(id, []) == [] ]
+            if verbose > 2: print "time:",time,"free_workers:",free_workers
+            # do we have any worker free
+            if free_workers != []:
+                # check all available nodes
+                avail = [node for node in allnodes if self.can_go(path, node)]
+                if verbose > 2: print "time:",time,"avail:",avail
+                # check if all avail nodes are already in queues
+                for anode,awid in zip(avail, free_workers):
+                    # skip if a new node already in any worker queue
+                    if any([ anode in que for id,que in worker.items() ]): continue
+                    # assign available node anode to worker id awid
+                    worker[ awid ] = [ anode ] * (ord(anode) - ord('A') + 1 + self.stepsec)
+                #
+                if verbose > 2: print "time:",time,"worker queues:",worker
+
+            # visualize
+            #
+            if verbose: print time,' '.join([ '.' if worker.get(id,[]) == [] else worker[id][-1] for id in range(self.workers) ]),path
+
+            # remove from queues
+            for id,queue in worker.items():
+                # nothing to remove from empty queue
+                if queue == []: continue
+                # remove (pop)
+                done = queue.pop()
+                # completed ?
+                if queue == []:
+                    # yes, walk on
+                    path.append(done)
+                    # remove from available
+                    allnodes.remove(done)
+                    #
+                    if verbose > 2: print "time:",time,"path updated:",path
+
+            # no more any nodes available => end
+            if len(avail) == 0: break
+        else:
+            return "ERR: timeout - increase time limit"
+        #
+        return time
 
     def input_line(self, str):
         """ Step C must be finished before step A can begin. """
@@ -73,14 +126,20 @@ class Sequence:
             if err: print err
         #
         if verbose: print "dependency:",self.dependency
-        r = self.walklin()
-        print "keys:",sorted(self.dependency.keys())
-        print "resu:",sorted(r)
+        #
+        r = self.walk()
         return ''.join(r)
 
     def task_b(self, input):
         """ task B """
-        return
+        for line in input:
+            err = self.input_line(line)
+            if err: print err
+        #
+        if verbose: print "dependency:", self.dependency
+        #
+        r = self.cooperative_walk(self.workers)
+        return r
 
 
 def testcase(sut, input, result, task_b=False):
@@ -113,13 +172,12 @@ Step F must be finished before step E can begin.
 testcase(Sequence(), data.strip().split('\n'),  'CABDFE')
 # GKRVWBESYAMZDPTIUCFXQJLHNO
 testcase(Sequence(), None, 'GKRVWBESYAMZDPTIUCFXQJLHNO')
-xxx
+
 # ========
 #  Task B
 # ========
 
 # test cases
-testcase((), ['', '', '', ''],            2, task_b=True)
-
-# [1m 34s] 56360
-testcase((), None, 2, task_b=True)
+testcase(Sequence(), data.strip().split('\n'),  15, task_b=True)
+# 903
+testcase(Sequence(workers=5, stepsec=60), None, 903, task_b=True)
