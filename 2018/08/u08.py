@@ -5,7 +5,7 @@ __motd__ = '--- Day 8: Memory Maneuver ---'
 __url__ = 'http://adventofcode.com/2018/day/8'
 
 
-verbose = 1
+verbose = 0
 
 
 class License:
@@ -24,20 +24,16 @@ class License:
                  B----------- C-----------
                                   D-----
         """
-        # node = { header: [], child: [node, node], metadata: []}
+        # node = { header: [], child: [node, node], meta: [metadata]}
         header, data = lst[:2], lst[2:]
         numchld, nummeta = int(header[0]), int(header[1])
         if verbose: print "build_tree(",' '.join(lst),") child#:",numchld,"meta#:",nummeta
+        # children
         children = []
-        if numchld == 0:
-            # this is valid only if no children
-            metadata, data = data[:nummeta], data[nummeta:]
-        else:
-            #metadata, data = data[-nummeta:], data[:-nummeta]
-            for i in range(numchld):
-                subtree, data = self.build_tree(data)
-                children.append(subtree)
-            metadata, data = data[:nummeta], data[nummeta:]
+        for i in range(numchld):
+            subtree, data = self.build_tree(data)
+            children.append(subtree)
+        metadata, data = data[:nummeta], data[nummeta:]
         # construct node
         node = {
             'header': header,
@@ -47,8 +43,22 @@ class License:
         return node, data
 
     def get_metadata(self, tree):
-        """ get all metadata as flat list """
+        """ get all metadata as a flat list """
         return tree['meta'] + [ x for child in tree['child'] for x in self.get_metadata(child) ]
+
+    def get_rootval(self, tree):
+        """ get the root node value (children depndent) """
+        # no children = return sum of meta
+        if tree['child'] == []:
+            return sum([ int(x) for x in tree['meta'] ])
+        # with children = meta is the 1-index
+        r = []
+        for m in tree['meta']:
+            idx = int(m) - 1
+            if 0 <= idx < len(tree['child']):
+                child = tree['child'][idx]
+                r.append( self.get_rootval(child) )
+        return sum(r)
 
     def input_line(self, str):
         """ 2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2 """
@@ -67,7 +77,12 @@ class License:
 
     def task_b(self, input):
         """ task B """
-        return
+        for line in input:
+            tree, err = self.input_line(line)
+            if err: print err
+        #
+        r = self.get_rootval(tree)
+        return r
 
 
 def testcase(sut, input, result, task_b=False):
@@ -98,7 +113,7 @@ testcase(License(), None, 45210)
 # ========
 
 # test cases
-testcase((), ['', '', '', ''],            2, task_b=True)
+testcase(License(), ['2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2'],           66, task_b=True)
 
-# [1m 34s] 56360
-testcase((), None, 2, task_b=True)
+# 22793
+testcase(License(), None, 22793, task_b=True)
