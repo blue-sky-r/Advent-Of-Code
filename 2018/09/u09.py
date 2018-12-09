@@ -32,14 +32,11 @@ class Marbles:
         [3]  0  2  1 (3)
         [4]  0 (4) 2  1  3
         """
-        idx = self.current + offset
-        # special case - current = last
-        if self.current+1 == len(self.board):
-            idx = 1
-        elif self.current+1 == len(self.board)-1:
+        # special case if current is last_by_one -> append
+        if self.current+1 == len(self.board)-1:
             idx = len(self.board)
-        # special case - the last
-        #idx = (self.current + offset) % (len(self.board) + 1)
+        else:
+            idx = (self.current + offset) % len(self.board)
         self.board.insert(idx, ball)
         self.current = idx
 
@@ -60,21 +57,26 @@ class Marbles:
 
     def game(self, lastball):
         """ play game until the last ball is played """
+        # player number generator
         pgen = self.next_player()
         # starting board
         if verbose: self.show()
-        # play
+        # play until ball value reach the lastball value
         for ball in range(1, lastball+1):
             # next player
             player = next(pgen)
             # check divisibility by 23
             if (ball % 23) == 0:
+                # special rule - take ball
                 self.score[player].append(ball)
+                # remove another ball from board
                 removedball = self.remove_ccw()
+                # take also removed ball
                 self.score[player].append(removedball)
             else:
+                # place a new ball on board
                 self.place_cw(ball)
-            # display board
+            # display the board
             if verbose: self.show(player)
 
     def winner(self):
