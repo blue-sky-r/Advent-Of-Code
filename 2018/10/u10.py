@@ -15,8 +15,8 @@ class Stars:
 
     def __init__(self):
         self.star = []
-        # huge value for finding minimum dx
-        self.dx = 111222
+        # any huge value for the first evaluation  of stop condition 9exploading stars)
+        self.last_dxdy = 1000, 1000
 
     def add_star(self, position, velocity):
         """ add star with pos (x,y) and velocity (dx,dy) """
@@ -30,7 +30,7 @@ class Stars:
         xrange, yrange = self.xy_range()
         #
         stars = dict([ (s['pos'],s['vel']) for s in self.star])
-        print "time:",tm,"dx:",xrange[1]-xrange[0],"dy:",yrange[1]-yrange[0]
+        print "time:",tm,"x-range:",xrange[1]-xrange[0],"y-ramge:",yrange[1]-yrange[0]
         for y in range(yrange[0], yrange[1]+1):
             for x in range(xrange[0], xrange[1]+1):
                 if stars.get((x,y)):
@@ -48,13 +48,22 @@ class Stars:
         if verbose > 1: print "xy_range() x:",xmin,"..",xmax, "y:",ymin,"..",ymax,"dx:",xmax-xmin,"dy:",ymax-ymin
         return (xmin, xmax), (ymin, ymax)
 
-    def is_text(self):
-        """ text has x positive and y positive only """
-        xrange, yrange = self.xy_range()
-        dx, dy = xrange[1] - xrange[0], yrange[1] - yrange[0]
-        lastdx = self.dx
-        self.dx = dx
-        return dy == 9 and dx < 256 and lastdx < dx
+    def stars_are_exploding(self):
+        """ stars are exploading to wider area """
+        # previous (last) x-range, y-range
+        lst_dx, lst_dy = self.last_dxdy
+        # actual x-range, y-range
+        act_x, act_y = self.xy_range()
+        # calc difference for x-range y-range
+        act_dx, act_dy = act_x[1] - act_x[0], act_y[1] - act_y[0]
+        # delta dx, delta dy
+        ddx, ddy = lst_dx - act_dx, lst_dy - act_dy
+        # store actual ranges for next iteration
+        self.last_dxdy = act_dx, act_dy
+        # if any delta is negative => stars are exploding
+        if verbose > 1: print "stars_are_exploading() dx:",act_dx,"dy:",act_dy,"ddx:",ddx,"ddy:",ddy
+        # both deltas are negative -> exploding and x-range and y-range reasonable small for the message
+        return (ddx < 0) and (ddy < 0) and (act_dx < 250) and (act_dy < 20)
 
     def input_line(self, str):
         """ position=< 9,  1> velocity=< 0,  2> """
@@ -76,15 +85,20 @@ class Stars:
             })
         self.star = r
 
-    def find_text(self, timeout=11000):
+    def find_text(self, timeout=100000):
         """ cycle time until text if found """
-        found = False
         for t in range(0, timeout):
-            if self.is_text():
-                self.show(t)
+            # stop iterations if stars are exploading
+            if self.stars_are_exploding():
+                # undo the last move
+                self.time_step(dir=-1)
+                return True, t-1
+            # move stars
             self.time_step()
+            # visualize if requested
             if verbose: self.show(t)
-        return found, t
+        # not found, timout occured
+        return False, t
 
     def task_a(self, input):
         """ task A """
@@ -93,7 +107,10 @@ class Stars:
             if err: print err
         if verbose: self.show(0)
         ok, t = self.find_text()
-        if ok: self.show(t)
+        if ok:
+            print
+            print "SOLUTION in time:",t
+            self.show(t)
         return t
 
     def task_b(self, input):
@@ -152,17 +169,7 @@ position=<14,  7> velocity=<-2,  0>
 position=<-3,  6> velocity=< 2, -1>
 """
 # test cases
-testcase(Stars(), data.strip().split('\n'),          None)
+testcase(Stars(), data.strip().split('\n'),          3)
 
 # XPFXXXKL 10521
-testcase(Stars(), None, 1)
-xxx
-# ========
-#  Task B
-# ========
-
-# test cases
-testcase((), ['', '', '', ''],            2, task_b=True)
-
-# [1m 34s] 56360
-testcase((), None, 2, task_b=True)
+testcase(Stars(), None, 10521)
