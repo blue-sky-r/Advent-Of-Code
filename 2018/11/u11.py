@@ -27,7 +27,7 @@ class Grid:
         plevel = plevel * rack_id
         plevel = self.hundreds(plevel)
         plevel = plevel - 5
-        if verbose: print "cell_power_level(x:",x,"y:",y,") -> ",plevel
+        if verbose > 4: print "cell_power_level(x:",x,"y:",y,") -> ",plevel
         return plevel
 
     def recalc(self):
@@ -40,7 +40,7 @@ class Grid:
             # invalid square - outside of the grid
             return None
         spl = sum([ self.power_level[(x,y)] for x in range(topleftx, topleftx+size) for y in range(toplefty, toplefty+size) ])
-        if verbose: print "square-power_level(x:",topleftx,"y:",toplefty,") = ",spl
+        if verbose > 3: print "square_power_level(x:",topleftx,"y:",toplefty,"size:",size,") = ",spl
         return spl
 
     def find_max_spl(self, squaresize=3):
@@ -48,8 +48,30 @@ class Grid:
         # chyba dict()
         spl = dict([ ( (x,y), self.square_power_level(x,y, squaresize) ) for x in range(1, self.size-squaresize) for y in range(1, self.size-squaresize) ])
         maxspl = max(spl, key=spl.get)
-        if verbose: print "find_max_spl() = ",spl[maxspl]
+        if verbose > 2: print "find_max_spl(sqaresize:",squaresize,") = ",spl[maxspl],"@",maxspl
         return maxspl, spl[maxspl]
+
+    def find_max_square_size_old(self):
+        """ find square size to produce max power - brute force method = very slow """
+        mss = dict([(size, self.find_max_spl(size)) for size in range(1, self.size + 1)])
+        maxss = max(mss, key=mss.get)
+        if verbose > 1: print "find_max_square_size() = ", mss[maxss], "@", maxss
+        return maxss, mss[maxss]
+
+    def find_max_square_size(self):
+        """ find square size to produce max power using delta criteria (difference) """
+        # init
+        spl_last = self.find_max_spl(1)
+        # iterate while delta is positive => value is increasing
+        for size in range(2, self.size+1):
+            spl_act = self.find_max_spl(size)
+            # delta of max. square power level
+            delta = spl_act[1] - spl_last[1]
+            # if delta is <= 0, stop and return previous value
+            if delta < 0:
+                if verbose > 1: print "find_max_square_size() = ", spl_last,"@",size-1
+                return size-1, spl_last
+            spl_last = spl_act
 
     def input_line(self, str):
         """ -11 """
@@ -67,7 +89,13 @@ class Grid:
 
     def task_b(self, input):
         """ task B """
-        return
+        for line in input:
+            x, y = self.input_line(line)
+        # recalc antire grid
+        self.recalc()
+        size, xy_plevel = self.find_max_square_size()
+        xy, plevel = xy_plevel
+        return xy, plevel, size
 
 
 def testcase(sut, input, result, task_b=False):
@@ -94,18 +122,19 @@ def testcase(sut, input, result, task_b=False):
 #testcase(Grid(serial=39), [(217, 196)],  0)
 # testcase(Grid(serial=71), [(101, 153)],  4)
 
-testcase(Grid(serial=18), [], ((33, 45), 29))
-testcase(Grid(serial=42), [], ((21, 61), 30))
+#testcase(Grid(serial=18), [], ((33, 45), 29))
+#testcase(Grid(serial=42), [], ((21, 61), 30))
 
 # ((19, 17), 29)
-testcase(Grid(serial=7989), [], ((19, 17), 29))
-xxx
+#testcase(Grid(serial=7989), [], ((19, 17), 29))
+
 # ========
 #  Task B
 # ========
 
 # test cases
-testcase((), ['', '', '', ''],            2, task_b=True)
+testcase(Grid(serial=18), [], (( 90,269), 113, 16), task_b=True)
+testcase(Grid(serial=42), [], ((232,251), 119, 12), task_b=True)
 
-# [1m 34s] 56360
-testcase((), None, 2, task_b=True)
+# (233, 286), 132, 12 wrong: 233,286,12 ???
+testcase(Grid(serial=7989), [], ((233, 286), 132, 12), task_b=True)
