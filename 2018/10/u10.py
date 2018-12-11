@@ -26,17 +26,15 @@ class Stars:
         } )
 
     def show(self, tm):
-        """ visualize """
+        """ visualize star map """
         xrange, yrange = self.xy_range()
+        # header
+        print "time:", tm, "x-range:", xrange[1] - xrange[0], "y-ramge:", yrange[1] - yrange[0]
         #
         stars = dict([ (s['pos'],s['vel']) for s in self.star])
-        print "time:",tm,"x-range:",xrange[1]-xrange[0],"y-ramge:",yrange[1]-yrange[0]
         for y in range(yrange[0], yrange[1]+1):
             for x in range(xrange[0], xrange[1]+1):
-                if stars.get((x,y)):
-                    print '#',
-                else:
-                    print '.',
+                print '#' if stars.get((x,y)) else '.',
             print
 
     def xy_range(self):
@@ -76,14 +74,14 @@ class Stars:
 
     def time_step(self, dir=+1):
         """ time step, use dir=-1 for undo """
-        r = []
+        starmap = []
         for s in self.star:
             newpos = s['pos'][0] + dir * s['vel'][0], s['pos'][1] + dir * s['vel'][1]
-            r.append({
+            starmap.append({
                 'pos': newpos,
                 'vel': s['vel']
             })
-        self.star = r
+        self.star = starmap
 
     def find_text(self, timeout=100000):
         """ cycle time until text if found """
@@ -92,6 +90,7 @@ class Stars:
             if self.stars_are_exploding():
                 # undo the last move
                 self.time_step(dir=-1)
+                # return found and adjust the time (1 undo step)
                 return True, t-1
             # move stars
             self.time_step()
@@ -132,9 +131,10 @@ def testcase(sut, input, result, task_b=False):
     print 'got:',r,'\t','[ OK ]' if r == result else '[ ERR ]'
     print
 
-# ========
-#  Task A
-# ========
+# =========
+#  Task A,B
+# =========
+
 data = """
 position=< 9,  1> velocity=< 0,  2>
 position=< 7,  0> velocity=<-1,  0>
@@ -171,5 +171,6 @@ position=<-3,  6> velocity=< 2, -1>
 # test cases
 testcase(Stars(), data.strip().split('\n'),          3)
 
-# XPFXXXKL 10521
+# task A: XPFXXXKL
+# task B: 10521
 testcase(Stars(), None, 10521)
