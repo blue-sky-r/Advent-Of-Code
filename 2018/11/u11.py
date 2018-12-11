@@ -46,7 +46,7 @@ class Grid:
     def find_max_spl(self, squaresize=3):
         """ find the max square power level """
         # chyba dict()
-        spl = dict([ ( (x,y), self.square_power_level(x,y, squaresize) ) for x in range(1, self.size-squaresize) for y in range(1, self.size-squaresize) ])
+        spl = dict([ ( (x,y), self.square_power_level(x,y, squaresize) ) for x in range(1, self.size-squaresize+1) for y in range(1, self.size-squaresize+1) ])
         maxspl = max(spl, key=spl.get)
         if verbose > 2: print "find_max_spl(sqaresize:",squaresize,") = ",spl[maxspl],"@",maxspl
         return maxspl, spl[maxspl]
@@ -81,6 +81,7 @@ class Grid:
         """ task A """
         for line in input:
             x,y = self.input_line(line)
+        # only for reliminary test cases
         #r = self.cell_power_level(x, y)
         # recalc antire grid
         self.recalc()
@@ -117,16 +118,16 @@ def testcase(sut, input, result, task_b=False):
 # ========
 
 # test cases
-#testcase(Grid(serial=8),  [(  3,   5)],  4)
-#testcase(Grid(serial=57), [(122,  79)], -5)
-#testcase(Grid(serial=39), [(217, 196)],  0)
+# testcase(Grid(serial=8),  [(  3,   5)],  4)
+# testcase(Grid(serial=57), [(122,  79)], -5)
+# testcase(Grid(serial=39), [(217, 196)],  0)
 # testcase(Grid(serial=71), [(101, 153)],  4)
 
-#testcase(Grid(serial=18), [], ((33, 45), 29))
-#testcase(Grid(serial=42), [], ((21, 61), 30))
+testcase(Grid(serial=18), [], ((33, 45), 29))
+testcase(Grid(serial=42), [], ((21, 61), 30))
 
 # ((19, 17), 29)
-#testcase(Grid(serial=7989), [], ((19, 17), 29))
+testcase(Grid(serial=7989), [], ((19, 17), 29))
 
 # ========
 #  Task B
@@ -136,5 +137,5 @@ def testcase(sut, input, result, task_b=False):
 testcase(Grid(serial=18), [], (( 90,269), 113, 16), task_b=True)
 testcase(Grid(serial=42), [], ((232,251), 119, 12), task_b=True)
 
-# (233, 286), 132, 12 wrong: 233,286,12 ???
-testcase(Grid(serial=7989), [], ((233, 286), 132, 12), task_b=True)
+# ((233, 288), 152, 12)
+testcase(Grid(serial=7989), [], ((233, 288), 152, 12), task_b=True)
