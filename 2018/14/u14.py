@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-__motd__ = '--- Day  ---'
+__motd__ = '--- Day 14: Chocolate Charts ---'
 
-__url__ = 'http://adventofcode.com/2018/day/'
+__url__ = 'http://adventofcode.com/2018/day/14'
 
 
 verbose = 0
@@ -18,8 +18,9 @@ class Choco:
             'b': 1
         }
 
-    def show(self):
+    def show(self, msg=None):
         """ visualize recipes """
+        if msg: print msg
         s = []
         for idx,r in enumerate(self.recipe):
             if idx == self.elfs['a']:
@@ -49,22 +50,33 @@ class Choco:
 
     def task_a(self, input):
         """ task A """
+        # get recepes sequence after this index
         after = input
+        # result length
         rlen = 10
         while len(self.recipe) < after + rlen:
             if verbose: self.show()
             self.add_new_recipe()
             self.pick_new_recipe()
         # show result
-        if verbose:
-            print "result:"
-            self.show()
+        if verbose: self.show('Final Resul:')
         #
         return ''.join([ "%d" % r for r in self.recipe[input:input+rlen] ])
 
     def task_b(self, input):
         """ task B """
-        return
+        seq = input
+        while True:
+            if verbose: self.show()
+            self.add_new_recipe()
+            self.pick_new_recipe()
+            s = ''.join(["%d" % i for i in self.recipe])
+            pos = s.find(seq)
+            if pos > 0: break
+        # show result
+        if verbose: self.show('Final Resul:')
+        #
+        return pos
 
 
 def testcase(sut, input, result, task_b=False):
@@ -93,16 +105,16 @@ testcase(Choco(), 2018, '5941429882')
 
 # 4910101614
 testcase(Choco(), 793031, '4910101614')
-xxx
-#
-testcase((), None, 1)
 
 # ========
 #  Task B
 # ========
 
 # test cases
-testcase((), ['', '', '', ''],            2, task_b=True)
+testcase(Choco(), '51589',    9, task_b=True)
+testcase(Choco(), '01245',    5, task_b=True)
+testcase(Choco(), '92510',   18, task_b=True)
+testcase(Choco(), '59414', 2018, task_b=True)
 
-# [1m 34s] 56360
-testcase((), None, 2, task_b=True)
+#
+testcase(Choco(), '793031', 1, task_b=True)
