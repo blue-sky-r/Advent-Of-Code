@@ -51,12 +51,10 @@ class Choco:
         """ task A """
         after = input
         rlen = 10
-        while True:
+        while len(self.recipe) < after + rlen:
             if verbose: self.show()
             self.add_new_recipe()
             self.pick_new_recipe()
-            if len(self.recipe) > after + rlen:
-                break
         # show result
         if verbose:
             print "result:"
