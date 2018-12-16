@@ -41,6 +41,8 @@ class Choco:
             a,b = new // 10, new % 10
             self.recipe.append(a)
             self.recipe.append(b)
+        # return string
+        return "%s" % new
 
     def pick_new_recipe(self):
         """ pick new recipe """
@@ -65,18 +67,32 @@ class Choco:
 
     def task_b(self, input):
         """ task B """
-        seq = input
+        # some local vars
+        seq, pos, length = input, 2, len(input)
+        if verbose: self.show('start')
         while True:
-            if verbose: self.show()
-            self.add_new_recipe()
+            justadded = self.add_new_recipe()
             self.pick_new_recipe()
-            s = ''.join(["%d" % i for i in self.recipe])
-            pos = s.find(seq)
-            if pos > 0: break
+            if verbose: self.show()
+            # test if sequence is the last by one
+            if len(justadded) == 2:
+                pos += 1
+                # ending at the last by one
+                genseq = ''.join([ "%d" % i for i in self.recipe[-length-1:-1]])
+                # found
+                if genseq == seq:
+                    break
+            # test id sequence is at the end
+            pos += 1
+            # sequencer at the end
+            genseq = ''.join([ "%d" % i for i in self.recipe[-length:]])
+            # found
+            if genseq == seq:
+                break
         # show result
         if verbose: self.show('Final Resul:')
-        #
-        return pos
+        # found sequence starting position
+        return pos - length
 
 
 def testcase(sut, input, result, task_b=False):
@@ -113,8 +129,9 @@ testcase(Choco(), 793031, '4910101614')
 # test cases
 testcase(Choco(), '51589',    9, task_b=True)
 testcase(Choco(), '01245',    5, task_b=True)
+
 testcase(Choco(), '92510',   18, task_b=True)
 testcase(Choco(), '59414', 2018, task_b=True)
 
-#
-testcase(Choco(), '793031', 1, task_b=True)
+# [3m 7s] 20253137
+testcase(Choco(), '793031', 20253137, task_b=True)
