@@ -11,6 +11,7 @@ verbose = 0
 class Cpu:
 
     def __init__(self):
+        # mnemonic -> executable
         self.instruction_set = {
             # ADD
             'addr': self.addr,
@@ -36,7 +37,7 @@ class Cpu:
             'eqri': self.eqri,
             'eqrr': self.eqrr
         }
-        # code -> instruction (for task B only)
+        # code -> mnemonic (for task B only)
         self.instruction_code = {}
         # registers (for task B only)
         self.regs = [ 0 for i in range(4) ]
@@ -224,7 +225,7 @@ class Cpu:
                     if item not in guess: continue
                     if len(guess) == 1:
                         if code not in self.instruction_code:
-                            # self.instruction_code[code] = self.instruction_set[item]
+                            # store code->mnemonic
                             self.instruction_code[code] = item
                             if verbose > 1: print "build_instruction_code() adding code:",code,"->",item
                     else:
