@@ -36,6 +36,10 @@ class Cpu:
             'eqri': self.eqri,
             'eqrr': self.eqrr
         }
+        # code -> instruction (for task B only)
+        self.instruction_code = {}
+        # registers (for task B only)
+        self.regs = [ 0 for i in range(4) ]
 
     def instruction(self, code, regs, pars):
         """ execute single instruction on registers input """
@@ -74,13 +78,13 @@ class Cpu:
     def bani(self, regs, pars):
         """ rc <- ra & #b """
         i, a, b, c = pars
-        regs[c] = regs[a] | b
+        regs[c] = regs[a] & b
         return regs
 
     def borr(self, regs, pars):
         """ rc <- ra | rb """
         i, a, b, c = pars
-        regs[c] = regs[a] & regs[b]
+        regs[c] = regs[a] | regs[b]
         return regs
 
     def bori(self, regs, pars):
@@ -148,42 +152,103 @@ class Cpu:
         if verbose > 1: print "find_ins(regsin:",regsin,"pars:",pars,"regsout:",regsout,") match:",match
         return match
 
-    def input_line(self, str):
+    def input_effect(self, str):
         """ Before: [3, 2, 1, 1]
             9 2 1 2
-            After:  [3, 2, 2, 1]  """
+            After:  [3, 2, 2, 1]
+            returns True if we have complete set (before, code, after)
+        """
         if str.startswith('Before: '):
             self.before = eval(str[len('Before: '):])
+            self.expectcode = True
             return False
         if str.startswith('After: '):
             self.after = eval(str[len('After: '):])
+            self.expectcode = False
             return True
-        self.code = [ int(i) for i in str.split(' ') ]
+        if self.expectcode:
+            self.code = [ int(i) for i in str.split(' ') ]
         return False
+
+    def input_code(self, str):
+        """ execute single instruction on global cpu registers """
+        code = [int(i) for i in str.split(' ')]
+        instruction = self.instruction_code[code[0]]
+        self.regs = self.instruction(instruction, self.regs[:], code)
+        if verbose > 1: print "input_code(",str,") code:",code,"instructon:",instruction,"regs:",self.regs
+
+    def input_line(self, str):
+        """ build table and then exec code """
+        # first build table
+        if not self.instruction_code:
+            # make guess if we have before=code-after triplets
+            if self.input_effect(str):
+                # guess
+                match = self.find_ins(self.before, self.code, self.after)
+                return match
+        # then execute code
+        else:
+            self.input_code(str)
+
+    def separator_detected(self, line, cnt=3):
+        """ cnt empty lines """
+        if line != '':
+            self.empty_lines = 0
+            return False
+        self.empty_lines += 1
+        return self.empty_lines >= cnt
 
     def task_a(self, input):
         """ task A """
         cnt = 0
-        # count empty (separator) lines
-        sepline = 0
         for line in input:
-            # is empty ?
-            if line == '':
-                sepline += 1
-                # 3 empty lines are separator for task B
-                if sepline >= 3: break
-            else:
-                sepline = 0
-                if self.input_line(line):
-                    # guess
-                    match = self.find_ins(self.before, self.code, self.after)
-                    # count only with 3 or more opcodes
-                    if len(match) >= 3: cnt += 1
+            match = self.input_line(line)
+            if match and len(match) >= 3: cnt += 1
+            if self.separator_detected(line): break
         return cnt
+
+    def build_instruction_code(self, guesstab):
+        """ settab code -> set_of_guesses"""
+        # rectify instruction guess table
+        while True:
+            # items we are sure (guess has only 1 item)
+            len1 = [code for code, guess in guesstab.items() if len(guess) == 1]
+            # break if all instruction codes hae been identified
+            if len(self.instruction_code) == len(guesstab):
+                break
+            # eliminate unique code from guesses
+            for g1 in len1:
+                item = list(guesstab[g1])[0]
+                #
+                for code, guess in guesstab.items():
+                    if item not in guess: continue
+                    if len(guess) == 1:
+                        if code not in self.instruction_code:
+                            # self.instruction_code[code] = self.instruction_set[item]
+                            self.instruction_code[code] = item
+                            if verbose > 1: print "build_instruction_code() adding code:",code,"->",item
+                    else:
+                        guess.remove(item)
+        return
 
     def task_b(self, input):
         """ task B """
-        return
+        # build instruction table
+        guesstab = {}
+        for line in input:
+            match = self.input_line(line)
+            if match:
+                # compose instructon table
+                code = self.code[0]
+                # keep only intersections
+                guesstab[code] = guesstab[code].intersection(set(match)) if guesstab.get(code) else set(match)
+            if self.separator_detected(line):
+                # rectify instruction table before execution
+                self.build_instruction_code(guesstab)
+        #
+        if verbose: print "task_b() regs:",self.regs
+        # return just register[0]
+        return self.regs[0]
 
 
 def testcase(sut, input, result, task_b=False):
@@ -214,13 +279,10 @@ testcase(Cpu(), data.strip().split('\n'),          1)
 
 # 651
 testcase(Cpu(), None, 651)
-xxx
+
 # ========
 #  Task B
 # ========
 
-# test cases
-testcase((), ['', '', '', ''],            2, task_b=True)
-
-# [1m 34s] 56360
-testcase((), None, 2, task_b=True)
+# 706
+testcase(Cpu(), None, 706, task_b=True)
