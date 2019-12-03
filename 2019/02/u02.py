@@ -11,9 +11,7 @@ verbose = 0
 class Computer:
 
     def __init__(self):
-        self.pc = 0
         self.program = None
-        self.running = False
         self.asm = {
              1: self.asm_add,
              2: self.asm_mult,
@@ -22,14 +20,14 @@ class Computer:
 
     def asm_halt(self):
         """ halt the computer """
-        if verbose: print 'DBG: HALT @',self.pc
+        if verbose > 2: print 'DBG: HALT @',self.pc
         self.running = False
         return self
 
     def asm_add(self):
         """ add @1 + @2 -> @3 """
         a, b, c = self.program[self.pc+1], self.program[self.pc+2], self.program[self.pc+3]
-        if verbose: print 'DBG: ADD @%d + @%d -> @%d' % (a,b,c)
+        if verbose > 2: print 'DBG: ADD @%d + @%d -> @%d' % (a,b,c)
         self.program[c] = self.program[a] + self.program[b]
         self.pc += 4
         return self
@@ -37,7 +35,7 @@ class Computer:
     def asm_mult(self):
         """ mul @1 * @2 -> @3 """
         a, b, c = self.program[self.pc + 1], self.program[self.pc + 2], self.program[self.pc + 3]
-        if verbose: print 'DBG: MUL @%d * @%d -> @%d' % (a, b, c)
+        if verbose > 2: print 'DBG: MUL @%d * @%d -> @%d' % (a, b, c)
         self.program[c] = self.program[a] * self.program[b]
         self.pc += 4
         return self
@@ -45,7 +43,7 @@ class Computer:
     def step(self):
         """ execute one step at pc """
         asm = self.program[self.pc]
-        if verbose: print 'DBG: executing code:', asm,'@',self.pc
+        if verbose > 3: print 'DBG: executing code:', asm,'@',self.pc
         asm_fnc = self.asm[asm]
         return asm_fnc()
 
@@ -58,6 +56,8 @@ class Computer:
     def program_load(self, prog):
         """ load csv string format to list """
         self.program = [int(i) for i in prog.split(',')]
+        self.pc = 0
+        self.running = False
         return self
 
     def run_prog(self, prog, alarm=None):
@@ -73,29 +73,30 @@ class Computer:
         self.run_prog(input, alarm)
         return self.program[0]
 
-    def task_b(self, input):
+    def task_b(self, input, find):
         """ task B """
+        for nv in range(10000):
+            result = self.task_a(input, alarm='%04d' % nv)
+            if verbose: print 'DBG: nv=%d result=%d' % (nv, result)
+            if result == find: return nv
         return
 
 
-def testcase(sut, input, result, task_b=False):
+def testcase(sut, input, result, alarm=None, task_b=False):
     """ testcase verifies if input returns result """
-    alarm = None
     # read default input file
     if input is None:
         data = __file__.replace('.py', '.input')
         with open(data) as f:
             input = f.readline().strip()
-        alarm = '1202'
     #
     #
     print "TestCase", "B" if task_b else "A",
     print "for input:", data if 'data' in vars() else input,
     print "\t expected result:", result,
-    r = sut.task_a(input, alarm) if not task_b else sut.task_b(input)
-    #r = f.find_duplo(input) if task_b else f.change_seq(input)
+    r = sut.task_a(input, alarm) if not task_b else sut.task_b(input, find=alarm)
     print 'got:',r,'\t','[ OK ]' if r == result else '[ ERR ]'
-    print 'Dump:',sut.program
+    if verbose > 1: print 'Dump:',sut.program
     print
 
 # ========
@@ -110,4 +111,14 @@ testcase(Computer(), '2,4,4,5,99,0', 2)
 testcase(Computer(), '1,1,1,4,99,5,6,0,99', 30)
 
 # 2842648
-testcase(Computer(),  None,  2842648)
+testcase(Computer(),  None,  2842648, '1202')
+
+# ========
+#  Task b
+# ========
+
+# test cases
+testcase(Computer(), None, 1202, 2842648, task_b=True)
+
+# 9074
+testcase(Computer(), None, 9074, 19690720, task_b=True)
