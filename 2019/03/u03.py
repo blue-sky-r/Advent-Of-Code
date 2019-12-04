@@ -23,7 +23,7 @@ class Grid:
         print 'Added path:', path
         #print '\n'.join([for x in range(self.size)[''.join([self.matrix[(x, y)] for y in range(self.size)])])
         for y in range(self.size+1, -self.start[1]-1, -1):
-            print ''.join([ 'o' if (x,y) == self.start else self.matrix.get((x,y), self.empty) for x in range(-self.start[0], self.size+1) ])
+            print ''.join([ 'o' if (x,y) == self.start else self.matrix.get((x,y), {'id':self.empty})['id'] for x in range(-self.start[0], self.size+1) ])
         print
 
     def position_within_viewport(self):
@@ -31,43 +31,51 @@ class Grid:
         return (-self.size <= self.position[0] <= self.size) and \
                (-self.size <= self.position[1] <= self.size)
 
-    def up_down_left_right(self, cnt, sym='*', dx=0, dy=0):
+    def up_down_left_right(self, cnt, id, dx=0, dy=0, delay=0):
         """ route wire with id up/down/left/right cnt steps """
         for x in range(cnt):
             self.position = self.position[0]+dx, self.position[1]+dy
+            delay += 1
             if self.position_within_viewport():
-                self.matrix[self.position] = sym if self.matrix.get(self.position, self.empty) in [self.empty, sym] else 'X'
-        return self
+                id_delay = self.matrix.get(self.position)
+                if id_delay:
+                    # two wire crossing (ignore itself crossing)
+                    if id_delay['id'] != id:
+                        self.matrix[self.position] = {'id': 'X', 'delay': id_delay['delay'] + delay}
+                else:
+                    self.matrix[self.position] = { 'id': id, 'delay': delay }
+        return delay
 
-    def up(self, cnt, id):
+    def up(self, cnt, id, delay):
         """ route wire up cnt steps """
-        return self.up_down_left_right(cnt, sym=id, dy=+1)
+        return self.up_down_left_right(cnt, id, delay=delay, dy=+1)
 
-    def down(self, cnt, id):
+    def down(self, cnt, id, delay):
         """ route wire down cnt steps """
-        return self.up_down_left_right(cnt, sym=id, dy=-1)
+        return self.up_down_left_right(cnt, id, delay=delay, dy=-1)
 
-    def left(self, cnt, id):
+    def left(self, cnt, id, delay):
         """ route wire up left steps """
-        return self.up_down_left_right(cnt, sym=id, dx=-1)
+        return self.up_down_left_right(cnt, id, delay=delay, dx=-1)
 
-    def right(self, cnt, id):
+    def right(self, cnt, id, delay):
         """ route wire up right steps """
-        return self.up_down_left_right(cnt, sym=id, dx=+1)
+        return self.up_down_left_right(cnt, id, delay=delay, dx=+1)
 
     def wire(self, path, id):
         """ layout te wire based on path (string) """
         self.position = self.start
+        delay = 0
         for step in path.split(','):
             cnt = int(step[1:])
             if step.startswith('U'):
-                self.up(cnt, id)
+                delay += self.up(cnt, id, delay)
             elif step.startswith('D'):
-                self.down(cnt, id)
+                delay += self.down(cnt, id, delay)
             elif step.startswith('L'):
-                self.left(cnt, id)
+                delay += self.left(cnt, id, delay)
             elif step.startswith('R'):
-                self.right(cnt, id)
+                delay += self.right(cnt, id, delay)
             else:
                 print 'ERROR: wire() routing step:', step
         return self
@@ -79,12 +87,12 @@ class Grid:
     def all_intersections(self):
         """ calc all intersections manhattan distances """
         # return dict([ (self.manhattan_distance((x,y)), (x, y)) for y in range(self.size) for x in range(self.size) if self.matrix[(x,y)] == 'X' ])
-        return dict([(self.manhattan_distance(xy), xy) for xy,id in self.matrix.items() if id == 'X'])
+        return dict([(self.manhattan_distance(xy), xy) for xy,id_delay in self.matrix.items() if id_delay['id'] == 'X'])
 
     def task_a(self, input):
         """ task A """
         for id, path in enumerate(input):
-            self.wire(path, id='%d' % id)
+            self.wire(path, id)
             if verbose > 2: self.show(path)
         all_x = self.all_intersections()
         if not all_x: print 'ERROR - no intersection found inside viewport, increase viewport size !'
