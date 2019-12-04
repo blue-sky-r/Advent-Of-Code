@@ -38,6 +38,7 @@ class Grid:
             delay += 1
             if self.position_within_viewport():
                 id_delay = self.matrix.get(self.position)
+                if verbose: print 'DBG: route wire(id=%d, delay=%d) @ %s = %s' % (id, delay, self.position, id_delay)
                 if id_delay:
                     # two wire crossing (ignore itself crossing)
                     if id_delay['id'] != id:
@@ -64,18 +65,19 @@ class Grid:
 
     def wire(self, path, id):
         """ layout te wire based on path (string) """
+        if verbose: print 'DBG: new wire path:', path
         self.position = self.start
         delay = 0
         for step in path.split(','):
             cnt = int(step[1:])
             if step.startswith('U'):
-                delay += self.up(cnt, id, delay)
+                delay = self.up(cnt, id, delay)
             elif step.startswith('D'):
-                delay += self.down(cnt, id, delay)
+                delay = self.down(cnt, id, delay)
             elif step.startswith('L'):
-                delay += self.left(cnt, id, delay)
+                delay = self.left(cnt, id, delay)
             elif step.startswith('R'):
-                delay += self.right(cnt, id, delay)
+                delay = self.right(cnt, id, delay)
             else:
                 print 'ERROR: wire() routing step:', step
         return self
@@ -84,17 +86,21 @@ class Grid:
         """ calc manhattan distance from xy to start """
         return abs(xy[0] - self.start[0]) + abs(xy[1] - self.start[1])
 
-    def all_intersections(self):
+    def all_x_manhattan(self):
         """ calc all intersections manhattan distances """
         # return dict([ (self.manhattan_distance((x,y)), (x, y)) for y in range(self.size) for x in range(self.size) if self.matrix[(x,y)] == 'X' ])
         return dict([(self.manhattan_distance(xy), xy) for xy,id_delay in self.matrix.items() if id_delay['id'] == 'X'])
+
+    def all_x_delay(self):
+        """ calc all intersections manhattan distances """
+        return dict([(id_delay['delay'], xy) for xy, id_delay in self.matrix.items() if id_delay['id'] == 'X'])
 
     def task_a(self, input):
         """ task A """
         for id, path in enumerate(input):
             self.wire(path, id)
             if verbose > 2: self.show(path)
-        all_x = self.all_intersections()
+        all_x = self.all_x_manhattan()
         if not all_x: print 'ERROR - no intersection found inside viewport, increase viewport size !'
         if verbose: print 'DBG: intersections within viewport:',all_x
         closest = min(all_x)
@@ -102,7 +108,14 @@ class Grid:
 
     def task_b(self, input):
         """ task B """
-        return
+        for id, path in enumerate(input):
+            self.wire(path, id)
+            if verbose > 2: self.show(path)
+        all_x = self.all_x_delay()
+        if not all_x: print 'ERROR - no intersection found inside viewport, increase viewport size !'
+        if verbose: print 'DBG: intersections within viewport:', all_x
+        min_delay = min(all_x)
+        return min_delay
 
 
 def testcase(sut, input, result, task_b=False):
@@ -137,4 +150,9 @@ testcase(Grid(5000),   None,  3247)
 # ========
 
 # test cases
+testcase(Grid(10), ['R8,U5,L5,D3', 'U7,R6,D4,L4'], 30, task_b=True)
+testcase(Grid(200), ['R75,D30,R83,U83,L12,D49,R71,U7,L72', 'U62,R66,U55,R34,D71,R55,D58,R83'], 610, task_b=True)
+testcase(Grid(200), ['R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51', 'U98,R91,D20,R16,D67,R40,U7,R15,U6,R7'], 410, task_b=True)
 
+# 48054
+testcase(Grid(5000),   None,  48054, task_b=True)
