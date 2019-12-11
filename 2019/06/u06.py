@@ -6,7 +6,7 @@ __url__ = 'http://adventofcode.com/2019/day/6'
 
 import math
 
-verbose = 1
+verbose = 0
 
 
 class Planet:
@@ -55,21 +55,28 @@ class UniOrbMap:
             found = self.find_planet(name, orbiter)
             if found: return found
 
-    def from_list(self, los):
-        """ create map from list of strings p)o planet->orbiter"""
+    def from_list(self, los, root='COM'):
+        """ create map from list of strings p)o planet->orbiter """
+        if verbose: print 'Processing input len:',len(los)
         while len(los) > 0:
-            print len(los),
-            # get the first planet
-            planet,orbiter  = los[0].split(')')
-            # empty map - just add planet+orbiter
-            if self.map is None:
-                self.map = Planet(planet).add_orbiter(Planet(orbiter))
-                del los[0]
-                continue
-            found = self.find_planet(planet)
-            if found:
-                found.add_orbiter(Planet(orbiter))
-                del los[0]
+            if verbose: print '.',
+            # iterate over all entries
+            for idx,str in enumerate(los):
+                planet,orbiter  = str.split(')')
+                # empty map - just add planet+orbiter if match to root
+                if self.map is None and planet == root:
+                    self.map = Planet(planet).add_orbiter(Planet(orbiter))
+                    break
+                found = self.find_planet(planet)
+                if found:
+                    found.add_orbiter(Planet(orbiter))
+                    break
+            else:
+                print
+                print "ERROR processing input @ len:", len(los)
+                if verbose: print "unprocessed:",los
+                return
+            del los[idx]
 
     def find_depth(self, name, segment=None, depth=0):
         """ get depth for planet name inamap segment  """
@@ -143,8 +150,8 @@ data = "COM)B B)C C)D D)E E)F B)G G)H D)I E)J J)K K)L"
 # test cases
 testcase(UniOrbMap(),     data,     42)
 
-#
-testcase(UniOrbMap(), None, 42)
+# 333679 takes [3m 35s] - input processing needs refactoring
+testcase(UniOrbMap(), None, 333679)
 
 # ========
 #  Task B
