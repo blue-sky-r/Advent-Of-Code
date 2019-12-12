@@ -110,10 +110,10 @@ def testcase(sut, input, result, task_b=False):
 # ========
 
 # test cases
-#testcase(SpaImaFor(3,2), '123456789012',  1)
+testcase(SpaImaFor(3,2), '123456789012',  1)
 
 # 2500
-#testcase(SpaImaFor(25, 6), None, 2500)
+testcase(SpaImaFor(25, 6), None, 2500)
 
 # ========
 #  Task B
