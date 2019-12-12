@@ -16,11 +16,16 @@ class SpaImaFor:
         self.height = height
         self.image = []
 
-    def show(self):
+    def show_layers(self):
         """ print image """
         for idx,layer in enumerate(self.image):
             print 'layer:',idx+1
             print '\t','\n\t'.join(layer)
+
+    def show_image(self, image, sym={'0':' ', '1':'*'}):
+        """ print image """
+        print
+        print '\n'.join([ row.replace('0', sym['0']).replace('1', sym['1']) for row in image ])
 
     def decode_str(self, str):
         """ decode string data to image """
@@ -49,17 +54,40 @@ class SpaImaFor:
         min0layer = [ k for k,v in count0.items() if v == min0 ]
         return min0layer[0]
 
+    def pixel(self, rowidx, colidx):
+        """ calc pixel row 0..h-1 col 0..w-1  value, 0 is black, 1 is white, and 2 is transparent """
+        # all values for pixel
+        vals = [ self.image[layidx][rowidx][colidx] for layidx in range(len(self.image)) ]
+        for v in vals:
+            # pass-through transparent pixels
+            if v == '2': continue
+            # return the first non-transparent pixel
+            return v
+        return vals[0]
+
+    def pixel_image(self):
+        """ calc entire image by pixel algo """
+        image = []
+        for rowidx in range(self.height):
+            row = ''.join([ self.pixel(rowidx, colidx) for colidx in range(self.width)])
+            image.append(row)
+        return image
+
     def task_a(self, input):
         """ task A """
         self.decode_str(input)
-        if verbose: self.show()
+        if verbose: self.show_layers()
         min0layer = self.min_zero_layer()
         c1c2 = self.layer_count(min0layer, '1') * self.layer_count(min0layer, '2')
         return c1c2
 
     def task_b(self, input):
         """ task B """
-        return
+        self.decode_str(input)
+        if verbose: self.show_layers()
+        image = self.pixel_image()
+        self.show_image(image)
+        return image
 
 
 def testcase(sut, input, result, task_b=False):
@@ -82,13 +110,19 @@ def testcase(sut, input, result, task_b=False):
 # ========
 
 # test cases
-testcase(SpaImaFor(3,2), '123456789012',  1)
+#testcase(SpaImaFor(3,2), '123456789012',  1)
 
 # 2500
-testcase(SpaImaFor(25, 6), None, 2500)
+#testcase(SpaImaFor(25, 6), None, 2500)
 
 # ========
 #  Task B
 # ========
 
+# test cases
+testcase(SpaImaFor(2, 2), '0222112222120000', ['01', '10'], task_b=True)
+
+# CYUAH
+cyuah = ['0110010001100100110010010', '1001010001100101001010010', '1000001010100101001011110', '1000000100100101111010010', '1001000100100101001010010', '0110000100011001001010010']
+testcase(SpaImaFor(25, 6), None, cyuah, task_b=True)
 
