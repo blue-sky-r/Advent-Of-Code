@@ -14,7 +14,7 @@ verbose = 0
 class Submarine:
 
     def __init__(self):
-        self.xy = { 'x': 0, 'y':0 }
+        self.xy = { 'x': 0, 'y':0}
         # valid commands
         self.cmd = {
             'up':       self.go_up,
@@ -56,6 +56,52 @@ class Submarine:
         return self.x_mult_y()
 
 
+class Submarine_aim:
+
+    def __init__(self):
+        self.xy = { 'x':0, 'depth':0, 'aim': 0 }
+        # valid commands
+        self.cmd = {
+            'up':       self.aim_up,
+            'down':     self.aim_down,
+            'forward':  self.aim_go_forward,
+        }
+
+    def aim_up(self, val):
+        self.xy['aim'] -= val
+
+    def aim_down(self, val):
+        self.xy['aim'] += val
+
+    def aim_go_forward(self, val):
+        self.xy['x'] += val
+        self.xy['depth'] += self.xy['aim'] * val
+
+    def sub_cmd(self, cmd):
+        """ parser for string 'command val' - returns false for unknown command """
+        # string go_function and value
+        go, val = cmd.split()
+        # transform to fnc and numeric val
+        go_fnc, val = self.cmd.get(go), int(val)
+        # invalid command ?
+        if not go_fnc: return False
+        # valid command, just execute
+        go_fnc(val)
+        # ok
+        return True
+
+    def x_mult_y(self):
+        """ result x * y """
+        return self.xy['x'] * self.xy['depth']
+
+    def task_b(self, input):
+        """ task A """
+        for idx,cmd in enumerate(input):
+            if not self.sub_cmd(cmd):
+                print('ERROR: invalid command @ line ', idx+1, ' - ', cmd)
+        return self.x_mult_y()
+
+
 def testcase_a(sut, input, result):
     """ testcase verifies if input returns result """
     # read default input file
@@ -76,7 +122,7 @@ def testcase_b(sut, input, result):
     if input is None:
         data = __file__.replace('.py', '.input')
         with open(data) as f:
-            input = [ int(line.strip()) for line in f ]
+            input = [ line.strip() for line in f ]
     #
     print("TestCase B using input:", data if 'data' in vars() else input)
     print("\t expected result:", result)
@@ -103,3 +149,12 @@ testcase_a(Submarine(), ['forward 5', 'down 5', 'forward 8', 'up 3', 'down 8', '
 # 1804520
 testcase_a(Submarine(),   None,     1804520)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(Submarine_aim(), ['forward 5', 'down 5', 'forward 8', 'up 3', 'down 8', 'forward 2'],  900)
+
+# 1971095320
+testcase_b(Submarine_aim(),   None,    1971095320)
