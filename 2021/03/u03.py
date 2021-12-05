@@ -16,49 +16,85 @@ class BinDiag:
     def __init__(self):
         pass
 
-    def add_data(self, data):
-        """ add binary diagnostic data """
-        self.data = data
-
-    def count_bit_at_pos(self, pos0, bit01='0'):
+    def count_bit_at_pos(self, data, pos0, bit01='0'):
         """ count bit chr01 at position pos0 (0-based starting from left) """
-        bit_chr = [ s[pos0] for s in self.data ]
+        bit_chr = [ s[pos0] for s in data ]
         return bit_chr.count(bit01)
 
-    def most_at_pos(self, pos0, tie='-'):
+    def most_at_pos(self, data, pos0, tie='-'):
         """ return the most common bit at position pos0 (from left) """
-        threshold = len(self.data) / 2
-        cnt0 = self.count_bit_at_pos(pos0, '0')
+        threshold = len(data) / 2
+        cnt0 = self.count_bit_at_pos(data, pos0, '0')
         if cnt0 > threshold: return '0'
         if cnt0 < threshold: return '1'
         return tie
 
-    def gamma_rate(self):
+    def least_at_pos(self, data, pos0, tie='-'):
+        """ return the least common bit at position pos0 (from left) """
+        threshold = len(data) / 2
+        cnt0 = self.count_bit_at_pos(data, pos0, '0')
+        if cnt0 < threshold: return '0'
+        if cnt0 > threshold: return '1'
+        return tie
+
+    def gamma_rate(self, data):
         """ calc gamma rate """
-        gamma = [ self.most_at_pos(pos0) for pos0 in range(len(self.data[0])) ]
+        gamma = [ self.most_at_pos(data, pos0) for pos0 in range(len(data[0])) ]
         return int(''.join(gamma), 2)
 
-    def epsilon_rate(self):
+    def epsilon_rate(self, data):
         """ calc epsilon rate """
-        bin_max = 2**len(self.data[0]) - 1
-        epsilon = bin_max - self.gamma_rate()
+        bin_max = 2**len(data[0]) - 1
+        epsilon = bin_max - self.gamma_rate(data)
         return epsilon
 
-    def o2_rate(self):
-        """ calc oxygen rating """
-        for pos0 in range(len(self.data[0])):
-            bit01X = self.most_at_pos(pos0)
+    def filter_data_by_most_at_pos(self, data, pos0, tie='-'):
+        """ filter only data with bit matching most at position pos0 """
+        most = self.most_at_pos(data, pos0, tie)
+        filtered = [ item for item in data if item[pos0] == most ]
+        return filtered
+
+    def filter_data_by_least_at_pos(self, data, pos0, tie='-'):
+        """ filter only data with bit matching most at position pos0 """
+        least = self.least_at_pos(data, pos0, tie)
+        filtered = [ item for item in data if item[pos0] == least ]
+        return filtered
+
+    def filter_o2_data(self, data):
+        """ filter data for O2 rate """
+        for pos0 in range(len(data[0])):
+            data = self.filter_data_by_most_at_pos(data, pos0, tie='1')
+            if len(data) <= 1: break
+        return data
+
+    def filter_co2_data(self, data):
+        """ filter data for CO2 rate """
+        for pos0 in range(len(data[0])):
+            data = self.filter_data_by_least_at_pos(data, pos0, tie='0')
+            if len(data) <= 1: break
+        return data
+
+    def o2_rate(self, data):
+        o2 = self.filter_o2_data(data)
+        assert len(o2) == 1, 'ERROR - O2 filtering failed'
+        return int(o2[0], 2)
+
+    def co2_rate(self, data):
+        co2 = self.filter_co2_data(data)
+        assert len(co2) == 1, 'ERROR - CO2 filtering failed'
+        return int(co2[0], 2)
 
     def task_a(self, input):
         """ task A """
-        self.add_data(input)
-        gamma = self.gamma_rate()
-        epsilon = self.epsilon_rate()
+        gamma = self.gamma_rate(input)
+        epsilon = self.epsilon_rate(input)
         return gamma * epsilon
 
     def task_b(self, input):
         """ task B """
-        return None
+        o2 = self.o2_rate(input)
+        co2 = self.co2_rate(input)
+        return o2 * co2
 
 
 def testcase_a(sut, input, result):
@@ -81,7 +117,7 @@ def testcase_b(sut, input, result):
     if input is None:
         data = __file__.replace('.py', '.input')
         with open(data) as f:
-            input = [ int(line.strip()) for line in f ]
+            input = [ line.strip() for line in f ]
     #
     print("TestCase B using input:", data if 'data' in vars() else input)
     print("\t expected result:", result)
@@ -108,4 +144,12 @@ testcase_a(BinDiag(), ['00100','11110','10110','10111','10101','01111','00111','
 # 3882564
 testcase_a(BinDiag(),   None,     3882564)
 
+# ========
+#  Task B
+# ========
 
+# test cases
+testcase_b(BinDiag(), ['00100','11110','10110','10111','10101','01111','00111','11100','10000','11001','00010','01010'],  230)
+
+# 3385170
+testcase_b(BinDiag(),   None,     3385170)
