@@ -19,26 +19,45 @@ class Crabs:
     def init_pos_csv(self, line: str):
         self.subs = list(map(int, line.split(',')))
 
-    def fuel_for_position(self, pos: int):
+    def fuel_for_position_dist(self, pos: int):
+        """ fuel is just distance d=abs(an-a1) """
         dist = [ abs(pos-s) for s in self.subs ]
         return sum(dist)
 
-    def fuel_for_alignment(self):
+    def fuel_for_alignment_a(self):
         maxpos = max(self.subs)
-        ffal = [ (pos, self.fuel_for_position(pos)) for pos in range(1, maxpos+1) ]
+        ffal = [ (pos, self.fuel_for_position_dist(pos)) for pos in range(1, maxpos+1) ]
+        return dict(ffal)
+
+    def fuel_for_position_aritseq(self, pos: int):
+        """ fuel is arithmetic sequence s=(a1+an)*n/2 """
+        dist = [ (1+abs(pos-s))*abs(pos-s)//2 for s in self.subs ]
+        return sum(dist)
+
+    def fuel_for_alignment_b(self):
+        maxpos = max(self.subs)
+        ffal = [ (pos, self.fuel_for_position_aritseq(pos)) for pos in range(1, maxpos+1) ]
         return dict(ffal)
 
     def task_a(self, input: list):
         """ task A """
         self.init_pos_csv(input[0])
         # dictionary pos -> fuel
-        posfuel = self.fuel_for_alignment()
-        minfuel = min(posfuel, key=posfuel.get)
-        return posfuel[minfuel]
+        posfuel = self.fuel_for_alignment_a()
+        # position with min fuel
+        minpos = min(posfuel, key=posfuel.get)
+        # return min fuel
+        return posfuel[minpos]
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        self.init_pos_csv(input[0])
+        # dictionary pos -> fuel
+        posfuel = self.fuel_for_alignment_b()
+        # position with min fuel
+        minpos = min(posfuel, key=posfuel.get)
+        # return min fuel
+        return posfuel[minpos]
 
 
 def testcase_a(sut, input, result):
@@ -104,3 +123,12 @@ testcase_a(Crabs(), testdata,  37)
 # 336701
 testcase_a(Crabs(),   None,    336701)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(Crabs(), testdata,  168)
+
+# 95167302
+testcase_b(Crabs(),   None,    95167302)
