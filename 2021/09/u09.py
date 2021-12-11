@@ -18,11 +18,12 @@ class Floor:
         # height-map - where 9 is the highest and 0 is the lowest
         self.hmap = []
 
-    def load_hmap(self, lines: str):
+    def load_hmap(self, lines:str):
         for line in lines:
+            # str -> list of ints e.g. '123' -> [1,2,3]
             self.hmap.append(list(map(int, list(line))))
 
-    def adjanced(self, x: int, y: int):
+    def adjanced(self, x:int, y:int):
         adj = []
         # x has asj. right
         if x < len(self.hmap[0])-1:
@@ -38,7 +39,7 @@ class Floor:
             adj.append(self.hmap[y-1][x])
         return adj
 
-    def is_low_point(self, x: int, y: int):
+    def is_low_point(self, x:int, y:int):
         """ low-points - the locations that are lower than any of its adjacent locations """
         h = self.hmap[y][x]
         adj = self.adjanced(x, y)
@@ -57,16 +58,64 @@ class Floor:
     def risk_level(self, lp: list):
         return sum([h+1 for h in lp])
 
-    def task_a(self, input: list):
+    def basin_walk(self, minheight:int, x:int, y:int, maxheight=9):
+        """ walk only uphill, do not touch limit, do noy walk outside of the map area """
+        # map low boundary check
+        if x<0 or y<0:
+            return None
+        # map high boundary check
+        if x>=len(self.hmap[0]) or y>=len(self.hmap):
+            return None
+        # only walk uphill and bellow limit
+        height = self.hmap[y][x]
+        if not minheight < height < maxheight:
+            return None
+        # result
+        r = { (x,y) }
+        # walk
+        east = self.basin_walk(height, x+1,y)
+        if east: r.update(east)
+        west = self.basin_walk(height, x-1,y)
+        if west: r.update(west)
+        south = self.basin_walk(height, x,y+1)
+        if south: r.update(south)
+        north = self.basin_walk(height, x,y-1)
+        if north: r.update(north)
+        # everything ok, return height
+        return r
+
+    def basin_area(self, x:int, y:int):
+        """ area surrounded by +1, 9 doesn't count  """
+        w = self.basin_walk(-1, x, y)
+        return len(w)
+
+    def find_basins_area(self):
+        """ find low-points """
+        area = []
+        for y in range(len(self.hmap)):
+            for x in range(len(self.hmap[0])):
+                if self.is_low_point(x,y):
+                    a = self.basin_area(x,y)
+                    area.append(a)
+        return area
+
+    def mult_3_biggest(self, bas:list):
+        mult = 1
+        for a in sorted(bas)[-3:]:
+            mult *= a
+        return mult
+
+    def task_a(self, input:list):
         """ task A """
         self.load_hmap(input)
         lp = self.find_low_points()
         return self.risk_level(lp)
 
-    def task_b(self, input: list):
+    def task_b(self, input:list):
         """ task B """
-        return None
-
+        self.load_hmap(input)
+        basins = self.find_basins_area()
+        return self.mult_3_biggest(basins)
 
 def testcase_a(sut, input, result):
     """ testcase verifies if input returns result """
@@ -137,3 +186,12 @@ testcase_a(Floor(), testdata,  15)
 # 535
 testcase_a(Floor(),   None,   535)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(Floor(), testdata,  1134)
+
+# 1122700
+testcase_b(Floor(),   None,    1122700)
