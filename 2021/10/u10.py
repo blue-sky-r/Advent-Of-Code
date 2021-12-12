@@ -8,7 +8,7 @@ __motd__ = '--- Year %s -- Day %s ---' % (__year__, __day__)
 
 __url__ = 'http://adventofcode.com/%s/day/%s' % (__year__, __day__)
 
-verbose = 1
+verbose = 0
 
 
 class Navigation:
@@ -21,7 +21,13 @@ class Navigation:
             '}': 1197,
             '>': 25137
         }
-        #
+        self.autocomplete = {
+            ')': 1,
+            ']': 2,
+            '}': 3,
+            '>': 4
+        }
+        # helpers generated from self.pairs
         self.bra_open   = [ br[0] for br in self.pairs ]
         self.bra_close  = [ br[1] for br in self.pairs ]
         self.bra_expect = dict([(br[0], br[1]) for br in self.pairs])
@@ -38,19 +44,20 @@ class Navigation:
                 # empty stack
                 if len(stack) == 0:
                     if verbose: print('line %d - unexpected closing %s at pos %d' % (linenum1, char, pos0+1))
-                    return char
+                    return char, None
                 expect = stack.pop()
                 if char != expect:
                     if verbose: print('line %d - expected %s got %s at pos %d' % (linenum1, expect, char, pos0+1))
-                    return char
+                    return char, None
             else:
                 if verbose: print('line %d - invalid char %s at pos %d' % (linenum1, char, pos0+1))
-                return char
+                return char, None
                 # non empty stack
         if len(stack) > 0:
             if verbose: print('line %d - incomplete, missing %d closing chars' % (linenum1, len(stack)))
+            return None, ''.join(stack[::-1])
         #
-        return None
+        return None, None
 
     def calc_score(self, errors: list):
         score = 0
@@ -58,21 +65,34 @@ class Navigation:
             score += self.points[char]
         return score
 
+    def calc_middle_autoscore(self, autocomplete: list):
+        scores = []
+        for missing in autocomplete:
+            score = 0
+            for char in missing:
+                score = score * 5 + self.autocomplete[char]
+            scores.append(score)
+        #
+        middle = sorted(scores)[len(scores)//2]
+        return middle
+
     def syntax_check(self, input: list):
-        errors = []
+        errors, autocomple = [], []
         for linenum0,line in enumerate(input):
-            errchar = self.syntax_check_line(linenum0+1, line)
-            if errchar: errors.append(errchar)
-        return errors
+            errchar, autochar = self.syntax_check_line(linenum0+1, line)
+            if errchar:  errors.append(errchar)
+            if autochar: autocomple.append(autochar)
+        return errors, autocomple
 
     def task_a(self, input: list):
         """ task A """
-        errors = self.syntax_check(input)
+        errors, _ = self.syntax_check(input)
         return self.calc_score(errors)
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        _, autocomplete = self.syntax_check(input)
+        return self.calc_middle_autoscore(autocomplete)
 
 
 def testcase_a(sut, input, result):
@@ -149,3 +169,12 @@ testcase_a(Navigation(), testdata,  26397)
 # 345441
 testcase_a(Navigation(),   None,   345441)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(Navigation(), testdata,  288957)
+
+# 3235371166
+testcase_b(Navigation(),   None,    3235371166)
