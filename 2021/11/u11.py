@@ -67,42 +67,36 @@ class OctoMap:
         return ready
 
     def energy_inc(self, inc=1):
-        flash = []
         for xy in self.iterate_xy():
-            energy = self.get_xy(xy) + inc
-            self.set_xy(xy, energy)
-            if energy>9:
-                flash.append(xy)
-        return flash
+            energy = self.get_xy(xy)
+            self.set_xy(xy, energy+inc)
 
-    def flash(self, ready: list):
-        #ready = self.find_flash_ready()
-        if len(ready)==0: return 0
+    def flash_recurs(self, ready:list):
+        if len(ready)==0:
+            return 0
         for xy in ready:
-            self.inc_adj_xy(xy)
-        for xy in ready:
+            self.flash_xy(xy)
+        reflash = self.find_flash_ready()
+        re_cnt = self.flash_recurs(reflash)
+        for xy in ready + reflash:
             self.set_xy(xy, 0)
-        re = self.find_flash_ready()
-        re_cnt = self.flash(re)
-        for xy in ready + re:
-            self.set_xy(xy, 0)
-        return len(ready) + len(re)
+        return len(ready) + re_cnt
 
     def single_step(self):
-        f = self.energy_inc()
-        return self.flash(f)
+        self.energy_inc()
+        ready = self.find_flash_ready()
+        return self.flash_recurs(ready)
 
     def count_flashes(self, steps:int):
         cnt = 0
         for s in range(steps):
             if verbose: self.print(step=s)
-            c = self.single_step()
-            count0 = len([ xy for xy in self.iterate_xy() if self.get_xy(xy) == 0 ])
-            cnt += count0
-        if verbose:
-            self.print(step=steps)
-            print("cnt=",cnt)
+            cnt += self.single_step()
         return cnt
+
+    def is_sync_flash(self):
+        notflashing = len([ xy for xy in self.iterate_xy() if self.get_xy(xy) != 0 ])
+        return notflashing == 0
 
     def task_a(self, input: list, steps=100):
         """ task A """
@@ -110,9 +104,14 @@ class OctoMap:
         cnt = self.count_flashes(steps)
         return cnt
 
-    def task_b(self, input: list):
+    def task_b(self, input: list, steps=500):
         """ task B """
-        return None
+        self.build_energy_map(input)
+        for step in range(1,steps):
+            self.single_step()
+            if self.is_sync_flash():
+                break
+        return step
 
 
 def testcase_a(sut, input, result):
@@ -195,4 +194,14 @@ testdataX = """
 testcase_a(OctoMap(), testdata,  1656)
 
 # 1702
-testcase_a(OctoMap(),   None,     1702)
+testcase_a(OctoMap(),   None,    1702)
+
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(OctoMap(), testdata,  195)
+
+# 251
+testcase_b(OctoMap(),   None,    251)
