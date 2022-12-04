@@ -33,6 +33,11 @@ class Calories:
         max_key = max(calories, key=lambda k: calories[k])
         return calories[max_key]
 
+    def topN_calories(self, calories, top=3):
+        """ sum of top N calories """
+        calories_asc = sorted(calories, key=lambda k: calories[k])
+        return sum([ calories[k] for k in calories_asc[-top:] ])
+
     def task_a(self, input: list):
         """ task A """
         inventory = self.aggregate_calories(input)
@@ -40,7 +45,8 @@ class Calories:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        inventory = self.aggregate_calories(input)
+        return self.topN_calories(inventory)
 
 
 def testcase_a(sut, input, result):
@@ -126,7 +132,7 @@ testcase_a(Calories(),   None,    70509)
 # ========
 
 # test cases
-#testcase_b(C(), testdata,  2)
+testcase_b(Calories(), testdata,  45000)
 
-# 2
-#testcase_b(C(),   None,    2)
+# 208567
+testcase_b(Calories(),   None,   208567)
