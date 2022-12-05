@@ -16,7 +16,7 @@ class RockPaperScissors:
     def __init__(self):
         loss, draw, win = 0, 3, 6
         rock, paper, scissors = 1, 2, 3
-        self.score = {
+        self.score_a = {
             # ROCK ->
             'A X': rock + draw,
             'A Y': paper + win,
@@ -30,16 +30,31 @@ class RockPaperScissors:
             'C Y': paper + loss,
             'C Z': scissors + draw
         }
-        pass
+        # X is loss, Y is draw, Z is win
+        self.score_b = {
+            # ROCK ->
+            'A X': scissors + loss,
+            'A Y': rock + draw,
+            'A Z': paper + win,
+            # PAPER ->
+            'B X': rock + loss,
+            'B Y': paper + draw,
+            'B Z': scissors + win,
+            # SCISSORS ->
+            'C X': paper + loss,
+            'C Y': scissors + draw,
+            'C Z': rock + win
+        }
 
     def task_a(self, input: list):
         """ task A """
-        scores = [ self.score[rnd] for rnd in input ]
+        scores = [ self.score_a[rnd] for rnd in input ]
         return sum(scores)
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        scores = [ self.score_b[rnd] for rnd in input ]
+        return sum(scores)
 
 
 def testcase_a(sut, input, result):
@@ -114,7 +129,7 @@ testcase_a(RockPaperScissors(),   None, 12679)
 # ========
 
 # test cases
-#testcase_b(C(), testdata,  2)
+testcase_b(RockPaperScissors(), testdata,  12)
 
-# 2
-#testcase_b(C(),   None,    2)
+# 14470
+testcase_b(RockPaperScissors(),   None, 14470)
