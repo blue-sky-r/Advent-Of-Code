@@ -28,6 +28,13 @@ class Rucksack:
         if 'a' <= c <= 'z': return ord(c) - ord('a') + 1
         if 'A' <= c <= 'Z': return ord(c) - ord('A') + 27
 
+    def group_label(self, group):
+        """ group label is common in all rucksacks in the group """
+        label = None
+        for g in group:
+            label = set(g) if label is None else label.intersection(g)
+        return list(label)[0]
+
     def task_a(self, input: list):
         """ task A """
         common_items = [ self.common_item(rucksack) for rucksack in input ]
@@ -36,7 +43,14 @@ class Rucksack:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        labels, group = [], []
+        for rucksack in input:
+            group.append(rucksack)
+            if len(group) >= 3:
+                label, group = self.group_label(group), []
+                labels.append(label)
+        labels_priority = [ self.chr_priority(l) for l in labels ]
+        return sum(labels_priority)
 
 
 def testcase_a(sut, input, result):
@@ -114,7 +128,7 @@ testcase_a(Rucksack(),   None,   8252)
 # ========
 
 # test cases
-#testcase_b(C(), testdata,  2)
+testcase_b(Rucksack(), testdata,  70)
 
-# 2
-#testcase_b(C(),   None,    2)
+# 2828
+testcase_b(Rucksack(),   None,  2828)
