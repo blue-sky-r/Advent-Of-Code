@@ -8,7 +8,7 @@ __motd__ = '--- Year %s -- Day %s ---' % (__year__, __day__)
 
 __url__ = 'http://adventofcode.com/%s/day/%s' % (__year__, __day__)
 
-verbose = 1
+verbose = 0
 
 
 class SupplyStacks:
@@ -27,7 +27,7 @@ class SupplyStacks:
         for d in range(depth):
             items = ["[%s]" % stack[d] if len(stack) > d else ' - ' for stack in self.stacks]
             s.append(items)
-        # print
+        # print msg
         print('-', msg, '-')
         # print reversed
         for line in s[::-1]:
@@ -57,25 +57,32 @@ class SupplyStacks:
                 if item != ' ':
                     self.stacks[stack].append(item)
 
-    def move_N_from_A_to_B(self, n, a, b):
+    def move_N_from_A_to_B(self, n, a, b, keeporder=False):
         """ move N items from top of A to top of B """
         stack_a, stack_b = self.stacks[a-1], self.stacks[b-1]
-        for i in range(n):
-            item = stack_a.pop()
-            stack_b.append(item)
+        if keeporder:
+            # pop N items
+            items = [ stack_a.pop() for i in range(n) ]
+            # push in reverse order
+            stack_b.extend(items[::-1])
+        else:
+            # Nx a.pop -> b.push
+            for i in range(n):
+                item = stack_a.pop()
+                stack_b.append(item)
 
-    def move_N_from_A_to_B_str(self, s):
+    def move_N_from_A_to_B_str(self, s, keeporder=False):
         """ instruction as a string move n from A to B """
         _move_, n, _from_, a, _to_, b = s.split()
-        self.move_N_from_A_to_B(int(n), int(a), int(b))
+        self.move_N_from_A_to_B(int(n), int(a), int(b), keeporder)
 
     def get_msg(self):
         """ get message from stack tops """
         msg = [ stack.pop() for stack in self.stacks ]
         return ''.join(msg)
 
-    def task_a(self, input: list):
-        """ task A """
+    def init_and_move(self, input: list, keeporder=False):
+        """ init stacks and move items based on instructions """
         init_state, init_done = [], False
         for line in input:
             # init ?
@@ -89,14 +96,19 @@ class SupplyStacks:
                 init_state.append(line)
                 continue
             # move instruction
-            self.move_N_from_A_to_B_str(line)
+            self.move_N_from_A_to_B_str(line, keeporder)
             self.print_stacks(line)
         #
+
+    def task_a(self, input: list):
+        """ task A """
+        self.init_and_move(input)
         return self.get_msg()
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        self.init_and_move(input, keeporder=True)
+        return self.get_msg()
 
 
 def testcase_a(sut, input, result):
@@ -126,12 +138,12 @@ def testcase_b(sut, input, result):
     if input is None:
         data = __file__.replace('.py', '.input')
         with open(data) as f:
-            input = [ line.strip() for line in f ]
+            input = [ line.rstrip() for line in f ]
     #
     print("TestCase B using input:", data if 'data' in vars() else input)
     # read multiline string as input
     if input.count('\n') > 2:
-        input = [ line.strip() for line in input.splitlines() ]
+        input = [ line.rstrip() for line in input.splitlines() ]
         # optional delete the first empty line
         if len(input[0]) == 0:
             input = input[1:]
@@ -172,3 +184,12 @@ testcase_a(SupplyStacks(), testdata,  'CMZ')
 # WCZTHTMPS
 testcase_a(SupplyStacks(),   None, 'WCZTHTMPS')
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(SupplyStacks(), testdata, 'MCD')
+
+# BLSGJSDTS
+testcase_b(SupplyStacks(),   None, 'BLSGJSDTS')
