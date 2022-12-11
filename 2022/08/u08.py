@@ -23,39 +23,66 @@ class TreeMap:
         # borders are visible
         if x == 0 or y == 0 or x == dimx or y == dimy:
             return True
-        # left
-        left = [ True if self.hmap[xy] > self.hmap[(xx,y)] else False for xx in range(x) ]
-        visible_from_left = all(left)
-        # right
-        right = [ True if self.hmap[xy] > self.hmap[(xx,y)] else False for xx in range(x+1, dimx) ]
-        visible_from_right = all(right)
-        # up
-        up = [ True if self.hmap[xy] > self.hmap[(x,yy)] else False for yy in range(y) ]
-        visible_from_up = all(up)
-        # down
-        down = [ True if self.hmap[xy] > self.hmap[(x,yy)] else False for yy in range(y+1, dimy) ]
-        visible_from_down = all(down)
-        #
-        return visible_from_left or visible_from_right or visible_from_up or visible_from_down
+        # 4 dirs
+        for dx,dy in [(-1,0), (+1,0), (0,-1), (0,+1)]:
+            visible = all([ self.hmap[xy] > self.hmap[(xy_)] for xy_ in self.xy_move(xy, dx, dy) ])
+            if visible:
+                return True
+        return False
 
     def create_map(self, input):
-        """ """
-        self. hmap = {}
+        """ build height map from string matrix """
+        self.hmap = {}
         for y, line in enumerate(input):
             for x, height in enumerate(line):
                 self.hmap[ (x,y) ] = height
         self.dim = (x+1,y+1)
 
+    def xy_move(self, xy, dx=0, dy=0):
+        """ possible moves from position xy by direction dx/dy """
+        x, y = xy[0], xy[1]
+        dimx, dimy = self.dim[0], self.dim[1]
+        r = []
+        while dx != 0 and 0 <= x+dx < dimx:
+            x += dx
+            r.append( (x,y) )
+        while dy != 0 and 0 <= y+dy < dimy:
+            y += dy
+            r.append( (x,y) )
+        return r
+
+    def can_see(self, xy, dx=0, dy=0):
+        """ can see trees from xy """
+        treeheight = self.hmap[xy]
+        r = []
+        for xy in self.xy_move(xy, dx, dy):
+            height = self.hmap[xy]
+            r.append(height)
+            if height >= treeheight:
+                break
+        return r
+
+    def scenic_score(self, xy):
+        """ how many trees can see xy """
+        # up
+        up    = self.can_see(xy, dx=0, dy=-1)
+        down  = self.can_see(xy, dx=0, dy=+1)
+        left  = self.can_see(xy, dx=-1, dy=0)
+        right = self.can_see(xy, dx=+1, dy=0)
+        return len(up) * len(down) * len(left) * len(right)
+
     def task_a(self, input: list):
         """ task A """
         self.create_map(input)
-        visible = [ (x,y) for x in range(self.dim[0]) for y in range(self.dim[1]) if self.is_visible( (x,y) ) ]
+        visible = [ (x,y) for y in range(self.dim[1]) for x in range(self.dim[0]) if self.is_visible( (x,y) ) ]
         v = len(visible)
         return v
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        self.create_map(input)
+        scoremap = [ self.scenic_score( (x,y) ) for y in range(self.dim[1]) for x in range(self.dim[0]) ]
+        return max(scoremap)
 
 
 def testcase_a(sut, input, result, trim=str.strip):
@@ -123,6 +150,13 @@ testdata = """
 35390
 """
 
+"""
+0 0  0 0 0
+0 1  4 2 0
+0 4  2 8 0
+0 6 12 1 0
+0 0  0 0 0
+"""
 # ========
 #  Task A
 # ========
@@ -132,4 +166,14 @@ testcase_a(TreeMap(), testdata,  21)
 
 # 1733
 testcase_a(TreeMap(),   None,  1733)
+
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(TreeMap(), testdata,    8)
+
+# 284648
+testcase_b(TreeMap(),   None, 284648)
 
