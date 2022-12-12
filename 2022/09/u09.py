@@ -14,14 +14,15 @@ verbose = 0
 
 class Rope:
 
-    def __init__(self, start=(0,0), dim=None):
+    def __init__(self, tailsize=1, start=(0,0), dim=6):
         self.head = start
-        self.tail = start
+        self.tailsize = tailsize
+        self.tail = [ start for t in range(tailsize) ]
         self.track_tail = [ start ]
         self.dim = dim
 
     def print(self, header='', graphic=['.','#','s','T','H']):
-        """ visualize tail trail """
+        """ visualize tail trail map """
         if not verbose: return
         # autoscale
         if self.dim is None:
@@ -38,7 +39,7 @@ class Rope:
                     sym = graphic[1]
                 if (x,y) == (0,0):
                     sym = graphic[2]
-                if (x,y) == self.tail:
+                if (x,y) in self.tail:
                     sym = graphic[3]
                 if (x,y) == self.head:
                     sym = graphic[4]
@@ -46,7 +47,7 @@ class Rope:
             print(' '.join(row))
 
     def move(self, dir_steps: str):
-        """ """
+        """ move head and tailt follows based on given instruction dir_steps """
         dir, steps = dir_steps.split()
         dx, dy = 0, 0
         if dir == 'R': dx = +1
@@ -57,19 +58,20 @@ class Rope:
         for step in range(int(steps)):
             self.head = self.move_head_delta(dx, dy)
             self.tail = self.tail_follows_head()
+            self.append_trail()
 
     def move_head_delta(self, dx: int, dy: int):
         """ move head (by max 1) """
         return (self.head[0]+dx, self.head[1]+dy)
 
-    def head_tail_delta(self):
-        """ """
-        dx, dy = self.head[0] - self.tail[0], self.head[1] - self.tail[1]
+    def head_tail_delta(self, headxy, tailxy):
+        """ delta = xy1 - xy2  (tuples) """
+        dx, dy = headxy[0] - tailxy[0], headxy[1] - tailxy[1]
         return (dx, dy)
 
-    def tail_touching_head(self):
+    def tail_touching_head(self, headxy, tailxy):
         """  means tail is ok """
-        dx, dy = self.head_tail_delta()
+        dx, dy = self.head_tail_delta(headxy, tailxy)
         # touching = dx && dy  in range <-1..+1>
         return (-1 <= dx <= +1) and (-1 <= dy <= +1)
 
@@ -79,17 +81,28 @@ class Rope:
         if v < 0: return -1
         return 0
 
+    def append_trail(self):
+        """ append full tail (len=1) or only the last part of tail to tracking """
+        if self.tailsize == 1:
+            for tailxy in self.tail:
+                if tailxy not in self.track_tail:
+                    self.track_tail.append(tailxy)
+        else:
+            tailxy = self.tail[-1]
+            if tailxy not in self.track_tail:
+                self.track_tail.append(tailxy)
+
     def tail_follows_head(self):
         """ tail follows the head """
-        tailxy = self.tail
-        if self.tail_touching_head():
-            return tailxy
-        dx, dy = self.head_tail_delta()
-        stepx, stepy = self.normalize_delta(dx), self.normalize_delta(dy)
-        tailxy = (tailxy[0]+stepx, tailxy[1]+stepy)
-        if tailxy not in self.track_tail:
-            self.track_tail.append(tailxy)
-        return tailxy
+        headxy, newtail = self.head, []
+        for tailxy in self.tail:
+            if not self.tail_touching_head(headxy, tailxy):
+                dx, dy = self.head_tail_delta(headxy, tailxy)
+                stepx, stepy = self.normalize_delta(dx), self.normalize_delta(dy)
+                tailxy = (tailxy[0]+stepx, tailxy[1]+stepy)
+            headxy = tailxy
+            newtail.append( tailxy )
+        return newtail
 
 
 class RopeBridge:
@@ -107,7 +120,11 @@ class RopeBridge:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        rp = Rope(tailsize=9)
+        for line in input:
+            rp.move(line)
+            rp.print('after %s' % line)
+        return len(rp.track_tail)
 
 
 def testcase_a(sut, input, result, trim=str.strip):
@@ -188,3 +205,12 @@ testcase_a(RopeBridge(), testdata,  13)
 # 6011
 testcase_a(RopeBridge(),   None,  6011)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(RopeBridge(), testdata,  1)
+
+# 2419
+testcase_b(RopeBridge(),   None, 2419)
