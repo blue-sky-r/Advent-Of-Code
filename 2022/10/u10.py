@@ -8,12 +8,12 @@ __motd__ = '--- Year %s -- Day %s ---' % (__year__, __day__)
 
 __url__ = 'http://adventofcode.com/%s/day/%s' % (__year__, __day__)
 
-verbose = 0
+verbose = 1
 
 
 class CPU:
 
-    def __init__(self):
+    def __init__(self, cols=40, rows=6):
         self.X = 1
         self.CLK = 1
         self.signalstrength = 0
@@ -25,24 +25,49 @@ class CPU:
             'noop': self._noop,
             'addx': self._addx
         }
+        self.rows, self.cols = rows, cols
+        self.spritelen = 3
+        self.crt_pixels = []
+        self.clk_cycle()
+
+    def print_crt(self, txt=''):
+        """ visualize crt """
+        if not verbose: return
+        print(txt)
+        for row in range(self.rows):
+            line = [ '#' if (row*self.cols+col) in self.crt_pixels else '.' for col in range(self.cols) ]
+            print(''.join(line))
+        print()
 
     def _noop(self, v=None):
         self.CLK += 1
-        self.update_signalstrength()
+        self.clk_cycle()
 
     def _addx(self, v):
         self.CLK += 1
-        self.update_signalstrength()
+        self.clk_cycle()
         self.CLK += 1
         self.X += v
-        self.update_signalstrength()
+        self.clk_cycle()
 
     def update_signalstrength(self):
         """ update 20th + each 40th clk cycle """
         update_cycle = (self.CLK + self.ssupdate['ofs']) % self.ssupdate['each']
         if update_cycle == 0:
             self.signalstrength += self.CLK * self.X
-            if verbose: print('update_ss() CLK=',self.CLK, 'X=',self.X, 'ss=',self.signalstrength)
+            if verbose: print('update_signalstrength() CLK=',self.CLK, 'X=',self.X, 'ss=',self.signalstrength)
+
+    def clk_cycle(self):
+        """ cpu clock cycle """
+        self.update_signalstrength()
+        self.pixel()
+
+    def pixel(self):
+        """ active crt pixels """
+        row_x = (self.CLK-1) % self.cols
+        sprite = [ row_x-1, row_x, row_x+1 ]
+        if self.X in sprite:
+            self.crt_pixels.append(self.CLK-1)
 
     def exec(self, instruction):
         """  """
@@ -62,7 +87,10 @@ class CPU:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        for instruction in input:
+            self.exec(instruction)
+        self.print_crt('- result -')
+        return self.signalstrength
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -281,3 +309,12 @@ testcase_a(CPU(), testdata,  13140)
 # 14860
 testcase_a(CPU(),   None,    14860)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(CPU(), testdata, 13140)
+
+# RGZEHURK
+testcase_b(CPU(),   None,   14860)
