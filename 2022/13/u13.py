@@ -16,8 +16,8 @@ class DistressSignal:
     def __init__(self):
         pass
 
-    def parse_validate(self, input):
-        """ """
+    def parse_validate(self, input: list):
+        """ parse and validate pairs """
         idx, left, right, pairs, okpairs = 0, None, None, 0, []
         while idx < len(input):
             line = input[idx]
@@ -35,6 +35,26 @@ class DistressSignal:
                     okpairs.append(pairs)
                     if verbose: print('pair:', pairs,'is ok', left, right)
         return okpairs
+
+    def parse_add_div(self, input: list, dividers=[]):
+        """ just parse and add markers """
+        # start with dividers
+        result = dividers
+        for line in input:
+            if line:
+                result.append(eval(line))
+        return result
+
+    def sorted(self, input: list):
+        """ bubble sort input """
+        swap = 1
+        while swap:
+            swap = 0
+            for idx in range(len(input)-1):
+                if self.compare(input[idx], input[idx+1]) == +1:
+                    input[idx], input[idx+1] = input[idx+1], input[idx]
+                    swap += 1
+        return input
 
     def compare(self, l, r):
         """ compare left / right : l<r -1/ l=r 0/ l>r +1 """
@@ -55,6 +75,15 @@ class DistressSignal:
                 return c
         return self.compare(len(l), len(r))
 
+    def div_pos_mult(self, l: list, dividers: list):
+        """ locate dividers and calculate multiplication of position1 """
+        mult = 1
+        for divider in dividers:
+            idx = l.index(divider)
+            if idx is not None:
+                mult = mult * (idx+1)
+        return mult
+
     def task_a(self, input: list):
         """ task A """
         okpairs = self.parse_validate(input)
@@ -62,7 +91,11 @@ class DistressSignal:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        # dividers
+        div1, div2 = [[2]], [[6]]
+        lst = self.parse_add_div(input, dividers=[div1, div2])
+        lst = self.sorted(lst)
+        return self.div_pos_mult(lst, [div1, div2])
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -158,3 +191,12 @@ testcase_a(DistressSignal(), testdata,  13)
 # 5196
 testcase_a(DistressSignal(),   None,  5196)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(DistressSignal(), testdata,  140)
+
+# 22134
+testcase_b(DistressSignal(),   None,  22134)
