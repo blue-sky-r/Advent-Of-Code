@@ -15,24 +15,26 @@ verbose = 0
 
 class Calibration:
 
-    def __init__(self):
-        pass
+    def __init__(self, tx: dict):
+        self.tx = tx
 
-    def firstdigit(self, line: str) -> str:
+    def firstdigit(self, line: str) -> int:
         """ the first digit from line """
         for c in line:
-            if c.isdigit():
-                return c
+            v = self.tx.get(c)
+            if v is not None:
+                return v
 
-    def lastdigit(self, line: str) -> str:
+    def lastdigit(self, line: str) -> int:
         """ the lst digit from line """
         for c in line[::-1]:
-            if c.isdigit():
-                return c
+            v = self.tx.get(c)
+            if v is not None:
+                return v
 
     def linevalue(self, line: str) -> int:
         """ combine the first and last digit """
-        val = 10 * int(self.firstdigit(line)) + int(self.lastdigit(line))
+        val = 10 * self.firstdigit(line) + self.lastdigit(line)
         return val
 
     def task_a(self, input: list):
@@ -113,11 +115,14 @@ treb7uchet
 #  Task A
 # ========
 
+# translator '0' -> 0
+tx = { chr(ord('0') + i):i for i in range(0, 10) }
+
 # test cases
-testcase_a(Calibration(), testdata,  142)
+testcase_a(Calibration(tx = tx), testdata,  142)
 
 # 54632
-testcase_a(Calibration(),   None,     54632)
+testcase_a(Calibration(tx = tx),   None,     54632)
 
 # ========
 #  Task B
