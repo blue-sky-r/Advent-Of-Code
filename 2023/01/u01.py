@@ -32,19 +32,46 @@ class Calibration:
             if v is not None:
                 return v
 
-    def linevalue(self, line: str) -> int:
+    def linevaluedigit(self, line: str) -> int:
         """ combine the first and last digit """
         val = 10 * self.firstdigit(line) + self.lastdigit(line)
         return val
 
+    def linefirstpos(self, line: str, substr: str) -> int:
+        """ the first position of substring in line, -1 if not found """
+        return line.find(substr)
+
+    def linelastpos(self, line: str, substr: str) -> int:
+        """ the first position of substring in line, -1 if nor found """
+        return line.rfind(substr)
+
+    def lineposval(self, line: str) -> dict:
+        """ get dict of position -> value for all keys from translator tx """
+        pos_val = {}
+        for txt,val in self.tx.items():
+            pos1st, posLast = self.linefirstpos(line, txt), self.linelastpos(line, txt)
+            if pos1st >= 0:
+                pos_val[pos1st] = val
+            if posLast >= 0:
+                pos_val[posLast] = val
+        return pos_val
+
+    def linevaluedesc(self, line: str) -> int:
+        """ combine the first and last digit """
+        pos_val = self.lineposval(line)
+        firstpos, lastpos = min(pos_val), max(pos_val)
+        val = 10 * pos_val[firstpos] + pos_val[lastpos]
+        return val
+
     def task_a(self, input: list):
         """ task A """
-        vals = [ self.linevalue(line) for line in input ]
+        vals = [ self.linevaluedigit(line) for line in input ]
         return sum(vals)
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        vals = [ self.linevaluedesc(line) for line in input ]
+        return sum(vals)
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -128,8 +155,34 @@ testcase_a(Calibration(tx = tx),   None,     54632)
 #  Task B
 # ========
 
-# test cases
-#testcase_b(C(), testdata,  2)
+# descriptive translator 'one' -> 1
+tx_desc = {
+    'one': 1,
+    'two': 2,
+    'three': 3,
+    'four': 4,
+    'five': 5,
+    'six': 6,
+    'seven': 7,
+    'eight': 8,
+    'nine': 9
+}
 
-# 2
-#testcase_b(C(),   None,    2)
+# merge basic and descriptive translators
+fulltx = {**tx, **tx_desc}
+
+testdata = """
+two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen
+"""
+
+# test cases
+testcase_b(Calibration(tx = fulltx), testdata,  281)
+
+# 54019
+testcase_b(Calibration(tx = fulltx),   None,  54019)
