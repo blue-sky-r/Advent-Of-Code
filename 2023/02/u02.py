@@ -18,11 +18,6 @@ class Bag:
     def __init__(self, cubes: dict):
         self.cubes = cubes
 
-    def add_cubes(self, d1: dict, d2: dict) -> dict:
-        """ add dictionaries d1 + d2 """
-        d = { color:d1.get(color,0) + d2.get(color,0) for color in self.cubes }
-        return d
-
     def are_cubes_within_limits(self, cubes: dict) -> bool:
         """ possible to have draw ? """
         within_limits = [ num <= self.cubes[color] for color,num in cubes.items() ]
@@ -52,6 +47,21 @@ class Bag:
             draws.append(cubes)
         return int(gamenr), draws
 
+    def min_set_of_cubes(self, draws: list):
+        """ minimum set of cubes to play all draws """
+        mincubes = {}
+        for draw in draws:
+            for color,num in draw.items():
+                mincubes[color] = max(mincubes.get(color, 0), num)
+        return mincubes
+
+    def calc_power(self, cubes: dict) -> int:
+        """ calculate power of cubes = red * green * blue """
+        m = 1
+        for color,num in cubes.items():
+            m *= num
+        return m
+
     def task_a(self, input: list):
         """ task A """
         valid = []
@@ -63,7 +73,12 @@ class Bag:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        powers = []
+        for game in input:
+            gameid, draws = self.parse_game(game)
+            cubes = self.min_set_of_cubes(draws)
+            powers.append(self.calc_power(cubes))
+        return sum(powers)
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -149,7 +164,7 @@ testcase_a(Bag(cubes=cubes), None, 1734)
 # ========
 
 # test cases
-#testcase_b(C(), testdata,  2)
+testcase_b(Bag(cubes=cubes), testdata,  2286)
 
-# 2
-#testcase_b(C(),   None,    2)
+# 70387
+testcase_b(Bag(cubes=cubes),   None,   70387)
