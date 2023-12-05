@@ -72,14 +72,14 @@ class Schematic:
                 if self.part_number_distace(part, valuexy) == 1 ]
         return adj
 
-    def locate_gears(self, numbers=list) -> list:
+    def locate_gears(self, numbers:list) -> list:
         """ find all (x,y) of all parts """
         gears = []
         potential_gear = [ xy \
                   for xy,char in self.map.items() \
                   if char == '*' ]
         for gear in potential_gear:
-            adj = self.adjanced_values(gear, numbers)
+            adj = self.adjanced_values([gear], numbers)
             if len(adj) == 2:
                 factor = adj[0] * adj[1]
                 gears.append(factor)
@@ -181,3 +181,12 @@ testcase_a(Schematic(), testdata, 4361)
 # 521515
 testcase_a(Schematic(),   None, 521515)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(Schematic(), testdata,  467835)
+
+# 69527306
+testcase_b(Schematic(),   None,  69527306)
