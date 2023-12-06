@@ -18,9 +18,14 @@ class Scratchboard:
     def __init__(self):
         pass
 
+    def card_winning_numbers(self, card: dict) -> list:
+        """ winning numbers / matching """
+        match = [ win for win in card['win'] for num in card['num'] if win == num ]
+        return match
+
     def card_worth(self, card: dict) -> int:
         """ calc single card worth """
-        match = [ win for win in card['win'] for num in card['num'] if win == num ]
+        match = self.card_winning_numbers(card)
         worth = 2 ** (len(match) - 1)
         return worth if len(match) > 0 else 0
 
@@ -42,6 +47,25 @@ class Scratchboard:
                 'num': numstr.split()
         }
 
+    def win_more_card(self, cardid: int, card: dict) -> list:
+        """ single card winning """
+        win = []
+        match = self.card_winning_numbers(card)
+        for idx,m in enumerate(match):
+            win.append(cardid + idx + 1)
+        return win
+
+    def win_more_cards(self, cards: dict) -> list:
+        """ """
+        haveid = []
+        for cardid,card in cards.items():
+            haveid.append(cardid)
+            copies = haveid.count(cardid)
+            win = self.win_more_card(cardid, card)
+            for copy in range(copies):
+                haveid.extend(win)
+        return haveid
+
     def parse_cards(self, cards: list) -> dict:
         """ cards { id: {win: [], num: []} } """
         cardsdict = {}
@@ -58,7 +82,9 @@ class Scratchboard:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        cards = self.parse_cards(input)
+        haveid = self.win_more_cards(cards)
+        return len(haveid)
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -142,7 +168,7 @@ testcase_a(Scratchboard(),   None,  22897)
 # ========
 
 # test cases
-#testcase_b(C(), testdata,  2)
+testcase_b(Scratchboard(), testdata,  30)
 
-# 2
-#testcase_b(C(),   None,    2)
+# 5095824
+testcase_b(Scratchboard(),   None, 5095824)
