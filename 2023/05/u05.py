@@ -55,11 +55,12 @@ class Gardener:
             'seed-to-soil', 'soil-to-fertilizer', 'fertilizer-to-water', 'water-to-light',
             'light-to-temperature', 'temperature-to-humidity', 'humidity-to-location'
         ]
-        if verbose: print('Seed: ', seed, end='. ')
+        #if verbose: print('Seed: ', seed, end='. ')
         r = seed
         for m in mapsequence:
             r = mappings[m].translate(r)
-            if verbose: print(m, r, end='. ')
+            #if verbose: print(m, r, end='. ')
+        #if verbose: print()
         return r
 
     def parse_almanac(self, input: list) -> tuple:
@@ -80,6 +81,18 @@ class Gardener:
             name = None
         return seeds, mappings
 
+    def find_min_location(self, seeds: list, mappings: dict) -> int:
+        """ find only min location """
+        minloc = None
+        for s,l in zip(seeds[::2], seeds[1::2]):
+            for seed in range(s, s+l):
+                loc = self.find_location(seed, mappings)
+                if minloc is None:
+                    minloc = loc
+                else:
+                    minloc = min(minloc, loc)
+        return minloc
+
     def task_a(self, input: list):
         """ task A """
         seeds, mappings = self.parse_almanac(input)
@@ -88,7 +101,15 @@ class Gardener:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        seeds, mappings = self.parse_almanac(input)
+        # this takes forever and consumes memory
+        #loc = [ self.find_location(seed, mappings) \
+        #        for s,l in zip(seeds[::2], seeds[1::2]) \
+        #        for seed in range(s, s+l) ]
+        #return min(loc)
+        #
+        minloc = self.find_min_location(seeds, mappings)
+        return minloc
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -199,7 +220,7 @@ testcase_a(Gardener(), None, 51752125)
 # ========
 
 # test cases
-#testcase_b(C(), testdata,  2)
+testcase_b(Gardener(), testdata, 46)
 
-# 2
-#testcase_b(C(),   None,    2)
+# 11h 52m 35s = 12634632
+testcase_b(Gardener(),   None, 12634632)
