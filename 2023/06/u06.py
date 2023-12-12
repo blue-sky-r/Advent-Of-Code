@@ -38,6 +38,15 @@ class BoatRace:
         winningbuttontimes = [ button for button,dist in enumerate(self.travelled_distances(racetime)) if dist > record ]
         return winningbuttontimes
 
+    def winning_button_cnt(self, racetime: int, record: int) -> int:
+        """ only count of winning button times for racetime """
+        cnt = 0
+        for button in range(racetime):
+            dist = self.travelled_distance(racetime, button)
+            if dist > record:
+                cnt += 1
+        return cnt
+
     def parse(self, input: list) -> tuple:
         """ parse time and distance striings to lists """
         for line in input:
@@ -53,6 +62,21 @@ class BoatRace:
                 continue
         return ms, dist
 
+    def parse_ignorespaces(self, input: list) -> tuple:
+        """ parse time and distance striings to lists """
+        for line in input:
+            # Time:      7  15   30
+            if line.startswith('Time:'):
+                _, timestr = line.split(':')
+                ms = int(timestr.replace(' ', ''))
+                continue
+            # Distance:  9  40  200
+            if line.startswith('Distance:'):
+                _, diststr = line.split(':')
+                dist = int(diststr.replace(' ', ''))
+                continue
+        return ms, dist
+
     def task_a(self, input: list):
         """ task A """
         r = 1
@@ -64,7 +88,9 @@ class BoatRace:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        racems, dist = self.parse_ignorespaces(input)
+        cnt = self.winning_button_cnt(racems, dist)
+        return cnt
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -144,7 +170,7 @@ testcase_a(BoatRace(),   None, 303600)
 # ========
 
 # test cases
-#testcase_b(C(), testdata,  2)
+testcase_b(BoatRace(), testdata, 71503)
 
-# 2
-#testcase_b(C(),   None,    2)
+# 23654842
+testcase_b(BoatRace(),   None, 23654842)
