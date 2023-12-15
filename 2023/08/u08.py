@@ -18,6 +18,23 @@ class Wasteland:
     def __init__(self):
         pass
 
+    def walk_to_XXZ(self, map: dict, steps: str) -> list:
+        """ walk simultaniusly from act -> **Z """
+        length, stepidx = 0, 0
+        xxa = [node for node in map if node.endswith('A')]
+        # repeat untill all nodes end in **Z
+        while not all([ node.endswith('Z') for node in xxa ]):
+            # mode each node
+            step, stepidx = steps[stepidx], (stepidx + 1) % len(steps)
+            for idx,node in enumerate(xxa):
+                left, right = map[node]
+                if step == 'L':
+                    xxa[idx] = left
+                if step == 'R':
+                    xxa[idx] = right
+            length += 1
+        return length
+
     def walk(self, map: dict, steps: str, act: str, end: str) -> list:
         """ walk steps """
         path, stepidx = [], 0
@@ -56,7 +73,9 @@ class Wasteland:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        map, steps = self.parse_map(input)
+        length = self.walk_to_XXZ(map, steps)
+        return length
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -149,3 +168,25 @@ testcase_a(Wasteland(), testdata,  6)
 # 19241
 testcase_a(Wasteland(), None, 19241)
 
+# ========
+#  Task B
+# ========
+
+testdata = """
+LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)
+"""
+
+# test cases
+testcase_b(Wasteland(), testdata,  6)
+
+# runtime over 12h abd has not finished !?
+testcase_b(Wasteland(),   None,    2)
