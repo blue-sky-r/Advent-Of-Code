@@ -24,25 +24,30 @@ class Predictor:
         return diff
 
     def predict(self, lst: list) -> int:
-        """ predict next number for lst """
+        """ predict leading and trailing number for lst """
         if all([i==0 for i in lst]):
-            return 0
+            return 0, 0
         diff = self.calc_diffs(lst)
-        p = self.predict(diff)
-        return lst[-1] + p
+        head, tail = self.predict(diff)
+        return lst[0] - head, lst[-1] + tail
 
     def task_a(self, input: list):
         """ task A """
         r = []
         for line in input:
             lst = [ int(i) for i in line.split() ]
-            pred = self.predict(lst)
-            r.append(pred)
+            head, tail = self.predict(lst)
+            r.append(tail)
         return sum(r)
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        r = []
+        for line in input:
+            lst = [ int(i) for i in line.split() ]
+            head, tail = self.predict(lst)
+            r.append(head)
+        return sum(r)
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -118,4 +123,12 @@ testcase_a(Predictor(), testdata,  114)
 # 1819125966
 testcase_a(Predictor(), None, 1819125966)
 
+# ========
+#  Task B
+# ========
 
+# test cases
+testcase_b(Predictor(), testdata,  2)
+
+# 1140
+testcase_b(Predictor(),   None, 1140)
