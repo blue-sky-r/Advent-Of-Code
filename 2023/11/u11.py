@@ -15,18 +15,22 @@ verbose = 0
 
 class GalaxyMap:
 
-    def __init__(self):
-        pass
+    def __init__(self, empty_multilier=1):
+        self.empty_multiplier = empty_multilier
 
-    def taxicab_distance(self, xy1: tuple, xy2: tuple) -> int:
+    def taxicab_distance(self, xy1: tuple, xy2: tuple, empties: list) -> int:
         """ calc taxicab distance between xy1 and xy2 """
         def abs(v: int) -> int:
             """ abs value """
             return v if v >= 0 else -v
-        absdx, absdy = abs(xy2[0] - xy1[0]), abs(xy2[1] - xy1[1])
+        # how many empty rows/columns are included in calculated distance
+        includedemptyx = [ x for x in empties[0] if min(xy1[0], xy2[0]) < x < max(xy1[0], xy2[0]) ]
+        includedemptyy = [ y for y in empties[1] if min(xy1[1], xy2[1]) < y < max(xy1[1], xy2[1]) ]
+        absdx = abs(xy2[0] - xy1[0]) + len(includedemptyx) * (self.empty_multiplier - 1)
+        absdy = abs(xy2[1] - xy1[1]) + len(includedemptyy) * (self.empty_multiplier - 1)
         return absdx + absdy
 
-    def double_empty_lines(self, input: list) -> list:
+    def multiply_empty_lines(self, input: list, mult: int = 2) -> list:
         """ double empty lines """
         expanded_map = []
         # double empty lines
@@ -34,7 +38,8 @@ class GalaxyMap:
             expanded_map.append(line)
             # line empty ?
             if line.count('#') == 0:
-                expanded_map.append(line)
+                for i in range(mult-1):
+                    expanded_map.append(line)
         return expanded_map
 
     def transpose_map(self, gmap: list) -> list:
@@ -45,41 +50,49 @@ class GalaxyMap:
             transposed.append(trow)
         return transposed
 
-    def parse_galaxymap(self, input: list) -> list:
+    def empty_rows(self, gmap: list) -> list:
+        """ get y coordinates of empty rows """
+        empties = []
+        for y,line in enumerate(gmap):
+            if line.count('#') == 0:
+                empties.append(y)
+        return empties
+
+    def parse_galaxymap(self, input: list) -> tuple:
         """ parse galaxy map and process expansion """
-        gmap = input
-        # process expansion
-        gmap = self.double_empty_lines(gmap)
-        gmap = self.transpose_map(gmap)
-        gmap = self.double_empty_lines(gmap)
-        gmap = self.transpose_map(gmap)
+        # identify empties
+        emptiesy = self.empty_rows(input)
+        tinput = self.transpose_map(input)
+        emptiesx = self.empty_rows(tinput)
         # extract galaxies
         galaxies = []
-        for y,line in enumerate(gmap):
+        for y,line in enumerate(input):
             for x,c in enumerate(line):
                 if c == '#':
                     galaxies.append((x,y))
-        return galaxies
+        return galaxies, (emptiesx, emptiesy)
 
-    def calc_distances(self, galaxies: list) -> list:
+    def calc_distances(self, galaxies: list, empties: list) -> list:
         """ calc distanec between galaxies pairs """
         dist = []
         for dfrom in range(len(galaxies)):
             for dto in range(dfrom+1, len(galaxies)):
-                d = self.taxicab_distance(galaxies[dfrom], galaxies[dto])
-                if verbose: print('dist: ',dfrom,'->',dto,'=',d)
+                d = self.taxicab_distance(galaxies[dfrom], galaxies[dto], empties)
+                if verbose: print('dist: ',dfrom+1,'->',dto+1,'=',d)
                 dist.append(d)
         return dist
 
     def task_a(self, input: list):
         """ task A """
-        galaxies = self.parse_galaxymap(input)
-        distances = self.calc_distances(galaxies)
+        galaxies, empties = self.parse_galaxymap(input)
+        distances = self.calc_distances(galaxies, empties)
         return sum(distances)
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        galaxies, empties = self.parse_galaxymap(input)
+        distances = self.calc_distances(galaxies, empties)
+        return sum(distances)
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -157,8 +170,20 @@ testdata = """
 # ========
 
 # test cases
-testcase_a(GalaxyMap(), testdata, 374)
+testcase_a(GalaxyMap(empty_multilier=2), testdata, 374)
 
 # 10077850
-testcase_a(GalaxyMap(), None, 10077850)
+testcase_a(GalaxyMap(empty_multilier=2), None, 10077850)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(GalaxyMap(empty_multilier=10), testdata, 1030)
+
+# test cases
+testcase_b(GalaxyMap(empty_multilier=100), testdata, 8410)
+
+# 504715068438
+testcase_b(GalaxyMap(empty_multilier=1000000), None, 504715068438)
