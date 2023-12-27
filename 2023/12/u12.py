@@ -10,6 +10,8 @@ __url__ = 'http://adventofcode.com/%s/day/%s' % (__year__, __day__)
 
 __version__ = '2023-12-12'
 
+import datetime
+
 verbose = 0
 
 
@@ -45,6 +47,8 @@ class HotSprings:
             if cnt > 0:
                 counts.append(cnt)
                 cnt = 0
+        if cnt > 0:
+            counts.append(cnt)
         return counts
 
     def line_match_nums(self, line: str, nums: list) -> bool:
@@ -54,10 +58,16 @@ class HotSprings:
 
     def brute_force_pattern_match(self, mask: str, nums: list):
         """ replace ? with all possible variants to find a match """
-        match, qmarks = [], mask.count('?')
+        match, qmarks, hmarks, htotal = [], mask.count('?'), mask.count('#'), sum(nums)
         for val in range(2**qmarks):
             replacement = self.val_to_str(val, qmarks)
+            # skip invalid replacements
+            if replacement.count('#') + hmarks != htotal:
+                continue
             aline = self.replace_mask(mask, replacement)
+            # validate number of parts ##..#.#..
+            if len([ p for p in aline.split('.') if p ]) != len(nums):
+                continue
             if self.line_match_nums(aline, nums):
                 match.append(aline)
         return match
@@ -68,18 +78,30 @@ class HotSprings:
         listnum = [ int(i) for i in num.split(',') ]
         return graph, listnum
 
+    def parse_line_5x(self, line: str) -> tuple:
+        """ ???.### 1,1,3 -> tuple(str, list) """
+        graph, num = line.split()
+        listnum = [ int(i) for i in num.split(',') ]
+        return '?'.join(5 * [graph]), 5 * listnum
+
     def task_a(self, input: list):
         """ task A """
         matches = []
         for line in input:
             graph, nums = self.parse_line(line)
-            match = self.brute_force_pattern_match(line, nums)
+            match = self.brute_force_pattern_match(graph, nums)
             matches.append(len(match))
         return sum(matches)
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        matches = []
+        for line in input:
+            graph, nums = self.parse_line_5x(line)
+            match = self.brute_force_pattern_match(graph, nums)
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), line, ' ... matches:', len(match))
+            matches.append(len(match))
+        return sum(matches)
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -155,7 +177,7 @@ testdata = """
 # test cases
 testcase_a(HotSprings(), testdata, 21)
 
-# 7771
+# [16s] 7771
 testcase_a(HotSprings(),   None, 7771)
 
 # ========
@@ -163,7 +185,7 @@ testcase_a(HotSprings(),   None, 7771)
 # ========
 
 # test cases
-#testcase_b(C(), testdata,  2)
+testcase_b(HotSprings(), testdata, 525152)
 
 # 2
 #testcase_b(C(),   None,    2)
