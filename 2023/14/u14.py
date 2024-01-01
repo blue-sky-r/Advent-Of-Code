@@ -8,7 +8,7 @@ __motd__ = '--- Year %s -- Day %s ---' % (__year__, __day__)
 
 __url__ = 'http://adventofcode.com/%s/day/%s' % (__year__, __day__)
 
-__version__ = '2023-12-01'
+__version__ = '2023-12-14'
 
 verbose = 0
 
@@ -72,15 +72,15 @@ class Dish:
             print(' '.join(row))
         print()
 
-    def slip_north(self, platform):
-        """ """
+    def tilt_north(self, platform):
+        """ tilt NORTH """
         # dimensions
         dimx, dimy = platform.getdimenstions()
         # slide limits
         ylimits = [ 0 for x in range(dimx) ]
         # by rows
         for y in range(dimy):
-            if verbose: self.display(platform, '--- y:%d ---' % y)
+            #if verbose: self.display(platform, '- North - y:%d ---' % y)
             for x in range(dimx):
                 at = platform.getxy(x,y)
                 # empty ?
@@ -98,6 +98,84 @@ class Dish:
                     ylimits[x] = slidetoy + 1
         return
 
+    def tilt_south(self, platform):
+        """ tilt SOUTH """
+        # dimensions
+        dimx, dimy = platform.getdimenstions()
+        # slide limits
+        ylimits = [ dimy-1 for x in range(dimx) ]
+        # by rows
+        for y in range(dimy-1, -1, -1):
+            #if verbose: self.display(platform, '- South - y:%d ---' % y)
+            for x in range(dimx):
+                at = platform.getxy(x,y)
+                # empty ?
+                if at == '.': continue
+                # square rock limits sliding
+                if at == '#':
+                    ylimits[x] = y-1
+                    continue
+                # round rock can slide
+                if at == 'O':
+                    slidetoy = ylimits[x]
+                    if slidetoy != y:
+                        platform.setxy(x,y, '.')
+                        platform.setxy(x, slidetoy, 'O')
+                    ylimits[x] = slidetoy - 1
+        return
+
+    def tilt_west(self, platform):
+        """ tilt WEST """
+        # dimensions
+        dimx, dimy = platform.getdimenstions()
+        # slide limits
+        xlimits = [ 0 for y in range(dimy) ]
+        # by cols starting from tilt
+        for x in range(dimx):
+            #if verbose: self.display(platform, '- West - x:%d ---' % x)
+            for y in range(dimy):
+                at = platform.getxy(x,y)
+                # empty ?
+                if at == '.': continue
+                # square rock limits sliding
+                if at == '#':
+                    xlimits[y] = x+1
+                    continue
+                # round rock can slide
+                if at == 'O':
+                    slidetox = xlimits[y]
+                    if slidetox != x:
+                        platform.setxy(x,y, '.')
+                        platform.setxy(slidetox,y, 'O')
+                    xlimits[y] = slidetox + 1
+        return
+
+    def tilt_east(self, platform):
+        """ tilt EAST """
+        # dimensions
+        dimx, dimy = platform.getdimenstions()
+        # slide limits
+        xlimits = [ dimx-1 for y in range(dimy) ]
+        # by rows
+        for x in range(dimx-1, -1, -1):
+            #if verbose: self.display(platform, '- East - x:%d ---' % x)
+            for y in range(dimy):
+                at = platform.getxy(x,y)
+                # empty ?
+                if at == '.': continue
+                # square rock limits sliding
+                if at == '#':
+                    xlimits[y] = x-1
+                    continue
+                # round rock can slide
+                if at == 'O':
+                    slidetox = xlimits[y]
+                    if slidetox != x:
+                        platform.setxy(x,y, '.')
+                        platform.setxy(slidetox,y, 'O')
+                    xlimits[y] = slidetox - 1
+        return
+
     def calc_load(self, platform):
         """ calc round rocks load """
         rounds = [ (platform.rows - y)  \
@@ -108,17 +186,21 @@ class Dish:
 
     def task_a(self, input: list):
         """ task A """
-        #roundrocks, cuberocks = self.parse_platform(input)
-        #roundrocks, cuberocks = self.tilt_north(roundrocks, cuberocks)
         platform = Matrix('u').from_listofstr(input)
-        self.slip_north(platform)
+        self.tilt_north(platform)
         load = self.calc_load(platform)
         return load
 
     def task_b(self, input: list):
         """ task B """
-        return None
-
+        platform = Matrix('u').from_listofstr(input)
+        for cycle in range(1000):
+            self.tilt_north(platform)
+            self.tilt_west(platform)
+            self.tilt_south(platform)
+            self.tilt_east(platform)
+        load = self.calc_load(platform)
+        return load
 
 def testcase_a(sut, input, result, trim=str.rstrip):
     """ testcase verifies if input returns result """
@@ -200,3 +282,12 @@ testcase_a(Dish(), testdata, 136)
 # 108857
 testcase_a(Dish(),  None, 108857)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase_b(Dish(), testdata, 64)
+
+# 95273
+testcase_b(Dish(),   None, 95273)
