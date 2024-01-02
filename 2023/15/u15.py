@@ -27,6 +27,44 @@ class Hash:
             current %= 256
         return current
 
+    def find_label_in_box(self, box: list, label: str) -> list:
+        """ find index of label in a box (label, focal_length) """
+        found = [ idx for idx,lbfl in enumerate(box) if lbfl[0] == label ]
+        return found
+
+    def parse_instruction(self, boxes: dict, instruction: str) -> dict:
+        """ update boxes based on instruction """
+        # remove lens
+        if instruction.endswith('-'):
+            label = instruction[:-1]
+            boxidx = self.calc_hash(label)
+            box = boxes.get(boxidx, [])
+            for idx in self.find_label_in_box(box, label):
+                del box[idx]
+        # add/replace lens
+        if '=' in instruction:
+            label, focallengthstr = instruction.split('=')
+            boxidx = self.calc_hash(label)
+            focallength = int(focallengthstr)
+            box = boxes.get(boxidx, [])
+            idxs = self.find_label_in_box(box, label)
+            if len(idxs) == 0:
+                box.append((label, focallength))
+            else:
+                for idx in idxs:
+                    box[idx] = (label, focallength)
+            boxes[boxidx] = box
+        return boxes
+
+    def focusing_power(self, boxes: dict) -> int:
+        """ calc focusing power """
+        fp = []
+        for id,box in boxes.items():
+            vals = [ (id+1) * (i+1) * lb_fp[1] for i,lb_fp in enumerate(box) ]
+            v = sum(vals)
+            fp.append(v)
+        return fp
+
     def task_a(self, input: list):
         """ task A """
         hashes = []
@@ -37,7 +75,11 @@ class Hash:
 
     def task_b(self, input: list):
         """ task B """
-        return None
+        boxes = {}
+        for instruction in input.split(','):
+            boxes = self.parse_instruction(boxes, instruction)
+        fp = self.focusing_power(boxes)
+        return sum(fp)
 
 
 def testcase_a(sut, input, result, trim=str.rstrip):
@@ -104,7 +146,7 @@ testdata = "HASH"
 # ========
 
 # test cases
-testcase_a(Hash(), testdata,  52)
+#testcase_a(Hash(), testdata,  52)
 
 testdata = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7"
 
@@ -114,4 +156,12 @@ testcase_a(Hash(), testdata, 1320)
 # 505379
 testcase_a(Hash(),   None, 505379)
 
+# ========
+#  Task B
+# ========
 
+# test cases
+testcase_b(Hash(), testdata, 145)
+
+# 263211
+testcase_b(Hash(),   None, 263211)
