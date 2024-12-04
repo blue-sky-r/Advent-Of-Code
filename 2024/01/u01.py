@@ -4,8 +4,6 @@ __motd__ = '--- Day 1: Historian Hysteria ---'
 
 __url__ = 'http://adventofcode.com/2024/day/1'
 
-import math
-
 verbose = 0
 
 
@@ -30,6 +28,11 @@ class Distance:
         d = [ abs(b - a) for a,b in zip(sorted(list0), sorted(list1)) ]
         return sum(d)
 
+    def calcoccurence(self, list0: list, list1: list) -> int:
+        """ calc occurence """
+        multocc = [ i * list1.count(i) for i in list0 ]
+        return sum(multocc)
+
     def task_a(self, input):
         """ task A """
         list0, list1 = self.cols2list(input)
@@ -38,7 +41,9 @@ class Distance:
 
     def task_b(self, input):
         """ task B """
-        return
+        list0, list1 = self.cols2list(input)
+        d = self.calcoccurence(list0, list1)
+        return d
 
 
 def testcase(sut, input, result, task_b=False):
@@ -49,11 +54,11 @@ def testcase(sut, input, result, task_b=False):
         with open(data) as f:
             input = [ line.strip() for line in f ]
     #
-    print("TestCase", "B" if task_b else "A", end=' ')
-    print("for input:", data if 'data' in vars() else input, end=' ')
-    print("\t expected result:", result, end=' ')
+    print(f"TestCase {"B" if task_b else "A"} ", end='')
+    print(f"for input: {data if 'data' in vars() else input}", end='')
+    print(f"\t expected result: {result} ", end='')
     r = sut.task_a(input) if not task_b else sut.task_b(input)
-    print('got:',r,'\t','[ OK ]' if r == result else '[ ERR ]')
+    print(f"got: {r} \t {'[ OK ]' if r == result else '[ ERR ]'}")
     print()
 
 # ========
@@ -73,3 +78,13 @@ testcase(Distance(),  inputa,  11)
 
 # 2066446
 testcase(Distance(),  None,  2066446)
+
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase(Distance(),  inputa,  31, task_b=True)
+
+# 24931009
+testcase(Distance(),  None,  24931009, task_b=True)
