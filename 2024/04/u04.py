@@ -17,14 +17,15 @@ class WordSearch:
         """ """
         m = {}
         for y, line in enumerate(
-            input if type(input) == list else input.strip().splitlines(), 0
+            input if type(input) == list else input.strip().splitlines()
         ):
             for x, sym in enumerate(line):
                 m[(x, y)] = sym
         return m, (x, y)
 
     def xystep(self, xy: tuple, dir: str) -> tuple:
-        """NW N NE
+        """
+        NW N NE
         W  X  E
         SW S SE
         """
@@ -76,6 +77,29 @@ class WordSearch:
                 words.append("".join(symbols))
         return words
 
+    def walkcross(self, map: dict, dim: tuple, xy: tuple) -> list[str]:
+        """walk in X cross fashion arounf xy center
+        NW   NE
+           X
+        SW   SE
+        """
+        words = []
+        # untuple
+        x, y = xy
+        dimx, dimy = dim
+        # valid xy ?
+        if 0 < x < dimx and 0 < y < dimy:
+            # xy
+            nwse = [self.xystep(xy, "NW"), xy, self.xystep(xy, "SE")]
+            nesw = [self.xystep(xy, "NE"), xy, self.xystep(xy, "SW")]
+            senw = [self.xystep(xy, "SE"), xy, self.xystep(xy, "NW")]
+            swne = [self.xystep(xy, "SW"), xy, self.xystep(xy, "NE")]
+            # xy to symbols ans words
+            for xy3 in [nwse, nesw, senw, swne]:
+                word = "".join([map[xy] for xy in xy3])
+                words.append(word)
+        return words
+
     def findxyforsymbol(self, map: dict, symbol: chr) -> list[tuple]:
         """find all xy for a symbol"""
         return [xy for xy, sym in map.items() if sym == symbol]
@@ -87,7 +111,19 @@ class WordSearch:
             words = self.walk(map, dim, xy, len(word))
             match = [w for w in words if w.startswith(word) or w.startswith(word[::-1])]
             cnt += len(match)
-            #print(cnt,xy,match,words)
+            if verbose:
+                print(f"cnt:{cnt} \t xy:{xy} \t match:{match} \t words:{words}")
+        return cnt
+
+    def crosscount(self, map, dim, word: str) -> int:
+        """count all words word in map"""
+        cnt = 0
+        for xy in self.findxyforsymbol(map, word[1]):
+            words = self.walkcross(map, dim, xy)
+            if words.count(word) == 2:
+                cnt += 1
+            if verbose:
+                print(f"cnt:{cnt} \t xy:{xy} \t words:{words}")
         return cnt
 
     def task_a(self, input):
@@ -98,7 +134,9 @@ class WordSearch:
 
     def task_b(self, input):
         """task B"""
-        return
+        map, dim = self.buildmap(input)
+        cnt = self.crosscount(map, dim, "MAS")
+        return cnt
 
 
 def testcase(sut, input, result, task_b=False):
@@ -138,3 +176,13 @@ testcase(WordSearch(), input, 18)
 
 # 2483
 testcase(WordSearch(), None, 2483)
+
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase(WordSearch(), input, 9, task_b=True)
+
+# 1925
+testcase(WordSearch(), None, 1925, task_b=True)
