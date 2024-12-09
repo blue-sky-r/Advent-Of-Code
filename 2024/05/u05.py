@@ -4,6 +4,7 @@ __motd__ = "--- Day 5: Print Queue ---"
 
 __url__ = "http://adventofcode.com/2024/day/5"
 
+
 verbose = 0
 
 
@@ -48,6 +49,33 @@ class PageOrdering:
                 correct.append(update)
         return correct
 
+    def fixupdate(self, update: list, rules: dict) -> list:
+        """Check if update is ok according to rules."""
+        fixed = update
+        for pageidx, page in enumerate(update):
+            if page in rules:
+                tails = rules[page]
+                for tail in tails:
+                    if tail in update:
+                        tailidx = update.index(tail)
+                        if tailidx > pageidx: continue
+                        # fix by swapping pageidx <=> tailidx
+                        fixed[pageidx], fixed[tailidx] = fixed[tailidx], fixed[pageidx]
+        return fixed
+
+    def fixincorrectlyordered(self, updates: list, rules: dict) -> list:
+        """Check if pages are correctly ordered based on ordering rules"""
+        corrected = []
+        for update in updates:
+            if self.updateok(update, rules): continue
+            # need a fix
+            fixed = update
+            # repeateadly fix
+            while not self.updateok(update, rules):
+                fixed = self.fixupdate(fixed, rules)
+            corrected.append(fixed)
+        return corrected
+
     def summiddle(self, correct: list[list[int]]) -> int:
         """Return the sum of the middle elements of the list."""
         middle = []
@@ -66,7 +94,10 @@ class PageOrdering:
 
     def task_b(self, input):
         """task B"""
-        return
+        rules, updates = self.parserulesupdates(input)
+        corrected = self.fixincorrectlyordered(updates, rules)
+        res = self.summiddle(corrected)
+        return res
 
 
 def testcase(sut, input, result, task_b=False):
@@ -124,3 +155,13 @@ testcase(PageOrdering(), input, 143)
 
 # 3608
 testcase(PageOrdering(), None, 3608)
+
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase(PageOrdering(), input, 123, task_b=True)
+
+# 4922
+testcase(PageOrdering(), None, 4922, task_b=True)
