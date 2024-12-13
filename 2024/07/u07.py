@@ -4,10 +4,15 @@ __motd__ = "--- Day 7: Bridge Repair ---"
 
 __url__ = "http://adventofcode.com/2024/day/7"
 
+import itertools
+
 verbose = 0
 
 
 class CalibrationEquations:
+
+    def __init__(self, op: str = "+*"):
+        self.op = op
 
     def parseeqs(self, input) -> list:
         """parse eqs to list, items are tuples (result, [terms])"""
@@ -20,28 +25,47 @@ class CalibrationEquations:
             eqs.append(eq)
         return eqs
 
+    def opgen(self, n):
+        """Generate combinations of length n from operators"""
+        return itertools.product(self.op, repeat=n)
+
+    def opgen_(self, n):
+        """Generate combinations of length n from operators (no itertools)"""
+        def helper(current_combination, remaining_length):
+            # Base case: if the remaining length is 0, yield the current combination
+            if remaining_length == 0:
+                yield tuple(current_combination)
+            else:
+                for op in self.op:
+                    # Append the current element and recurse
+                    current_combination.append(op)
+                    yield from helper(current_combination, remaining_length - 1)
+                    # Backtrack to explore other combinations
+                    current_combination.pop()
+
+        # Start the recursive helper function with an empty combination
+        yield from helper([], n)
+
     def genresults(self, terms: list) -> int:
         """calc all equations, use bin mask as 0->+ 1->*"""
         gr = []
-        # iterate all possible combinations
-        for i in range(2 ** (len(terms) - 1)):
+        # iterate all possible combinations of operators
+        for optpl in self.opgen(len(terms) - 1):
             calc = None
-            # remove 0bxxx prefix
-            oper = bin(i)[2:]
-            # prefix 0 to get len(terms)-1 and create iterator
-            operit = iter("0" * (len(terms) - 1 - len(oper)) + oper)
-            for t in terms:
+            for j, t in enumerate(terms):
                 if calc is None:
                     calc = t
                     continue
-                op = next(operit)
-                if op == "0":
+                op = optpl[j - 1]
+                if op == "+":
                     calc = calc + t
-                if op == "1":
+                if op == "*":
                     calc = calc * t
+                if op == "|":
+                    calc = int("".join([str(calc), str(t)]))
             gr.append(calc)
             if verbose:
-                print(f"i:{i} \t {oper:>8} \t calc={calc} \t {terms}")
+                print(f"{' '.join(optpl)} \t calc={calc} \t {terms}")
         return gr
 
     def verifyeq(self, val, terms) -> bool:
@@ -61,7 +85,9 @@ class CalibrationEquations:
 
     def task_b(self, input):
         """task B"""
-        return
+        eq = self.parseeqs(input)
+        solved = self.verifyeqs(eq)
+        return sum(solved)
 
 
 def testcase(sut, input, result, task_b=False):
@@ -100,3 +126,13 @@ testcase(CalibrationEquations(), input, 3749)
 
 # 7579994664753
 testcase(CalibrationEquations(), None, 7579994664753)
+
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase(CalibrationEquations("+*|"), input, 11387, task_b=True)
+
+# [53s] 438027111276610
+testcase(CalibrationEquations("+*|"), None, 438027111276610, task_b=True)
