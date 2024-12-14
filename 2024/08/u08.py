@@ -24,15 +24,13 @@ class Antennas:
         print(label)
         for y in range(dimy):
             for x in range(dimx):
-                print('#' if (x,y) in nodes else map.get((x, y), "."), end='')
+                print("#" if (x, y) in nodes else map.get((x, y), "."), end="")
             print()
         print()
 
     def parsemap(self, input):
         map = {}
-        for y, line in enumerate(
-            input if type(input) == list else input.splitlines()[1:]
-        ):
+        for y, line in enumerate(input if type(input) == list else input.splitlines()[1:]):
             for x, sym in enumerate(line):
                 if sym == ".":
                     continue
@@ -59,7 +57,7 @@ class Antennas:
         # calc mirror xy
         dx, dy = x - cx, y - cy
         mx, my = cx - dx, cy - dy
-        # verifu mx/my are on the map
+        # verift mx/my are on the map
         return (mx, my) if 0 <= mx < dimx and 0 <= my < dimy else None
 
     def antinodes(self, mapdim) -> list:
@@ -78,6 +76,40 @@ class Antennas:
             self.printmap(mapdim, nodes, f"freq:{freq} @ xy:{xylst}")
         return nodes
 
+    def mirror_harmonics(self, centerxy, xy, mapdim) -> list:
+        """mirror xy around center xy with harminics"""
+        # unpack
+        map, dim = mapdim
+        dimx, dimy = dim
+        x, y = xy
+        cx, cy = centerxy
+        # calc harmonics ubtil out of the map
+        dx, dy = x - cx, y - cy
+        mx, my = cx, cy
+        mxy = [centerxy]
+        while True:
+            # calc mirror xy
+            mx, my = mx - dx, my - dy
+            # verift mx/my are on the map
+            if 0 <= mx < dimx and 0 <= my < dimy:
+                mxy.append((mx, my))
+            else:
+                return mxy
+
+    def antinodes_harmonics(self, mapdim) -> list:
+        nodes = []
+        for freq, xylst in self.frequencies(mapdim).items():
+            # need two antennas for antinode
+            if len(xylst) == 1:
+                continue
+            # iterate combinarions
+            for xy1, xy2 in itertools.combinations(xylst, 2):
+                for mxy in self.mirror_harmonics(xy1, xy2, mapdim) + self.mirror_harmonics(xy2, xy1, mapdim):
+                    if mxy and mxy not in nodes:
+                        nodes.append(mxy)
+            self.printmap(mapdim, nodes, f"freq:{freq} @ xy:{xylst}")
+        return nodes
+
     def task_a(self, input):
         """task A"""
         mapdim = self.parsemap(input)
@@ -86,7 +118,9 @@ class Antennas:
 
     def task_b(self, input):
         """task B"""
-        return
+        mapdim = self.parsemap(input)
+        anodes = self.antinodes_harmonics(mapdim)
+        return len(anodes)
 
 
 def testcase(sut, input, result, task_b=False):
@@ -128,3 +162,13 @@ testcase(Antennas(), input, 14)
 
 # 367
 testcase(Antennas(), None, 367)
+
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase(Antennas(), input, 34, task_b=True)
+
+# 1285
+testcase(Antennas(), None, 1285, task_b=True)
