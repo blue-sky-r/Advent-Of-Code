@@ -46,9 +46,56 @@ class Filesystem:
             idx += 1
         return compacted
 
+    def defrag(self, bmap):
+        """ defrag files in blockmap """
+
+        def lastfile(files, fromidx):
+            """ find the last file starting from fromidx """
+            # skip free space
+            while files[fromidx] == self.freesym and fromidx > 0:
+                fromidx -= 1
+            if fromidx == 0:
+                return
+            # file found
+            fileid = files[fromidx]
+            length = 0
+            # calc file size
+            while files[fromidx] == fileid and fromidx >= 0:
+                fromidx -= 1
+                length += 1
+            return fileid, length, fromidx+1
+
+        def findfreeareaforfile(files, length):
+            """ find the first free area that can hold a file of length """
+            found = 0
+            for idx,s in enumerate(files):
+                if s == self.freesym:
+                    found += 1
+                    if found == length:
+                        return idx-length+1
+                else:
+                    found = 0
+
+        def movefile(files, fromidx, toidx, length):
+            """ move file from fromidx to toidx with length """
+            for i in range(length):
+                files[toidx+i] = files[fromidx+i]
+                files[fromidx+i] = self.freesym
+            return files
+
+        lastidx = len(bmap)
+        while lastidx > 0:
+            self.visualize('blockmap:', bmap)
+            fileid, length, lastidx = lastfile(bmap, lastidx-1)
+            availidx = findfreeareaforfile(bmap, length)
+            if availidx is not None and availidx < lastidx:
+                bmap = movefile(bmap, lastidx, availidx, length)
+        return bmap
+
+
     def checksum(self, compacted):
         """sum position * id"""
-        blocks = [i * id for i, id in enumerate(compacted)]
+        blocks = [i * id for i, id in enumerate(compacted) if id != self.freesym]
         return sum(blocks)
 
     def task_a(self, input):
@@ -62,7 +109,12 @@ class Filesystem:
 
     def task_b(self, input):
         """task B"""
-        return
+        bmap = self.blockmap(input)
+        self.visualize("blockmap:", bmap)
+        defragmented = self.defrag(bmap)
+        self.visualize("defragmented:", defragmented)
+        csum = self.checksum(defragmented)
+        return csum
 
 
 def testcase(sut, input, result, task_b=False):
@@ -92,3 +144,12 @@ testcase(Filesystem(), input, 1928)
 # 6216544403458
 testcase(Filesystem(), None, 6216544403458)
 
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase(Filesystem(), input, 2858, task_b=True)
+
+# [35s] 6237075041489
+testcase(Filesystem(), None, 6237075041489, task_b=True)
