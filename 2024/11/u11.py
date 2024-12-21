@@ -47,6 +47,19 @@ class PuStones:
             stones = self.blink1(stones)
         return stones
 
+    def rulenx(self, stone, n):
+        """ apply riule N-times]"""
+        #print('rule Nx n:',n,'stone:',stone)
+        # return length
+        if n == 0:
+            return len(stone) if type(stone) == list else 1
+        # apply rules and recurs
+        return sum([ self.rulenx(s, n-1) for s in self.rules(stone) ])
+
+    def blinknx(self, stones, n):
+        """ blink n-times to each items sep"""
+        return sum([self.rulenx(stone, n) for stone in stones])
+
     def task_a(self, input):
         """ task A """
         stones = self.parsestones(input)
@@ -55,7 +68,9 @@ class PuStones:
 
     def task_b(self, input):
         """ task B """
-        return
+        stones = self.parsestones(input)
+        length = self.blinknx(stones, 75)
+        return length
 
 
 def testcase(sut, input, result, task_b=False):
@@ -84,3 +99,13 @@ testcase(PuStones(),  input,  55312)
 
 # 224529
 testcase(PuStones(),  None,  224529)
+
+# ========
+#  Task B
+# ========
+
+# test cases
+testcase(PuStones(),  input,  0, task_b=True)
+
+# [ didn't finish in 12h - improved algo needed ]
+testcase(PuStones(),  None,  0, task_b=True)
