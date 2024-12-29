@@ -16,6 +16,7 @@ class Robots:
         self.dim = dim
 
     def display(self, robots, label=""):
+        """https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences"""
         if verbose == 0:
             return
         if label:
@@ -63,7 +64,7 @@ class Robots:
         """move gurads accoring to rules"""
         for t in range(sec):
             guards = self.move(guards)
-            self.display(guards, f"time={t+1}")
+            self.display(guards, f"= [ time={t+1} ] = ")
         return guards
 
     def sectorscount(self, guards):
@@ -90,6 +91,13 @@ class Robots:
 
     def task_b(self, input):
         """task B"""
+        global verbose
+
+        guards = self.parseinput(input)
+        self.display(guards, "Initial")
+        guards = self.movesec(guards, 7383)
+        verbose = 1
+        self.display(guards, '= final graphics =')
         return
 
 
@@ -131,4 +139,11 @@ p=9,5 v=-3,-3
 testcase(Robots(), input, 12)
 
 # 229069152
-testcase(Robots(dim=(101,103)), None, 229069152)
+testcase(Robots(dim=(101, 103)), None, 229069152)
+
+# ========
+#  Task B
+# ========
+
+# 7383
+testcase(Robots(dim=(101, 103)), None, None, task_b=True)
